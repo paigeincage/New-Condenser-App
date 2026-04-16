@@ -182,14 +182,65 @@ export function ExtractionReview({ items, onItemsChange, onCommit, loading }: Ex
         </div>
       ))}
 
-      {/* Commit button */}
-      <button
-        onClick={() => onCommit(items.filter((i) => i.selected))}
-        disabled={selectedCount === 0 || loading}
-        className="w-full py-3.5 rounded-xl font-semibold text-white bg-mar hover:bg-mar-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-base"
-      >
-        {loading ? 'Adding...' : `Add ${selectedCount} Item${selectedCount !== 1 ? 's' : ''} to Project`}
-      </button>
+      {/* Action buttons */}
+      <div className="space-y-2">
+        <button
+          onClick={() => onCommit(items.filter((i) => i.selected))}
+          disabled={selectedCount === 0 || loading}
+          className="w-full py-3.5 rounded-xl font-semibold text-white bg-mar hover:bg-mar-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-base"
+        >
+          {loading ? 'Adding...' : `Add ${selectedCount} Item${selectedCount !== 1 ? 's' : ''} to Project`}
+        </button>
+
+        {/* Export / Send right from review */}
+        {selectedCount > 0 && (
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => {
+                const selected = items.filter((i) => i.selected);
+                const text = selected.map((item, i) => {
+                  const loc = item.location ? ` (${item.location})` : '';
+                  return `${i + 1}. [${item.trade}] ${item.text}${loc}`;
+                }).join('\n');
+                navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
+              }}
+              className="py-2.5 rounded-xl border-[1.5px] border-g200 text-g600 font-medium text-sm hover:border-mar hover:text-mar transition-colors"
+            >
+              Copy
+            </button>
+            <button
+              onClick={() => {
+                const selected = items.filter((i) => i.selected);
+                const text = selected.map((item, i) => {
+                  const loc = item.location ? ` (${item.location})` : '';
+                  return `${i + 1}. [${item.trade}] ${item.text}${loc}`;
+                }).join('\n');
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = `punch-list-${new Date().toISOString().slice(0,10)}.txt`;
+                a.click(); URL.revokeObjectURL(url);
+              }}
+              className="py-2.5 rounded-xl border-[1.5px] border-g200 text-g600 font-medium text-sm hover:border-mar hover:text-mar transition-colors"
+            >
+              Download
+            </button>
+            <button
+              onClick={() => {
+                const selected = items.filter((i) => i.selected);
+                const text = selected.map((item, i) => {
+                  const loc = item.location ? ` (${item.location})` : '';
+                  return `${i + 1}. [${item.trade}] ${item.text}${loc}`;
+                }).join('\n');
+                const subject = `Punch List — ${selectedCount} Items`;
+                window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+              }}
+              className="py-2.5 rounded-xl border-[1.5px] border-g200 text-g600 font-medium text-sm hover:border-mar hover:text-mar transition-colors"
+            >
+              Email
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
