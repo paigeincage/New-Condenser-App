@@ -1,9 +1,26 @@
 import { api } from './client';
+import { cacheContacts, getCachedContacts } from '../db';
 import type { Contact } from '../types';
 
-export function listContacts(search?: string) {
+export async function listContacts(search?: string) {
   const q = search ? `?search=${encodeURIComponent(search)}` : '';
-  return api<{ contacts: Contact[] }>(`/api/contacts${q}`);
+  try {
+    const result = await api<{ contacts: Contact[] }>(`/api/contacts${q}`);
+    if (!search) cacheContacts(result.contacts).catch(() => {});
+    return result;
+  } catch (err) {
+    const cached = await getCachedContacts();
+    if (cached.length > 0) {
+      const filtered = search
+        ? cached.filter((c) => {
+            const s = search.toLowerCase();
+            return c.name.toLowerCase().includes(s) || c.trade.toLowerCase().includes(s) || c.company.toLowerCase().includes(s);
+          })
+        : cached;
+      return { contacts: filtered };
+    }
+    throw err;
+  }
 }
 
 export function createContact(data: Partial<Contact>) {
