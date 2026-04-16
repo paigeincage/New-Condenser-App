@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String   @unique
+  password  String
+  name      String
+  phone     String   @default("")
+  company   String   @default("")
+  signOff   String   @default("") @map("sign_off")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  projects  Project[]
+
+  @@map("users")
+}
+
+model Project {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  address   String
+  community String   @default("")
+  lot       String   @default("")
+  status    String   @default("active")
+  date      String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User         @relation(fields: [userId], references: [id])
+  items     PunchItem[]
+  files     SourceFile[]
+
+  @@index([userId])
+  @@map("projects")
+}
+
+model PunchItem {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  text         String
+  trade        String   @default("Uncategorized")
+  assignee     String   @default("")
+  status       String   @default("pending")
+  priority     String   @default("normal")
+  source       String   @default("Manual")
+  sourceFileId String?  @map("source_file_id") @db.Uuid
+  location     String   @default("")
+  notes        String   @default("")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  project    Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceFile SourceFile?  @relation(fields: [sourceFileId], references: [id])
+  tradeSteps TradeStep[]
+
+  @@index([projectId])
+  @@index([projectId, trade])
+  @@index([projectId, status])
+  @@map("punch_items")
+}
+
+model Contact {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                 String
+  email                String    @default("")
+  phone                String    @default("")
+  company              String    @default("")
+  trade                String    @default("")
+  notes                String    @default("")
+  preferredChannel     String    @default("email") @map("preferred_channel")
+  channelOverrideUntil DateTime? @map("channel_override_until")
+  createdAt            DateTime  @default(now()) @map("created_at")
+
+  @@index([trade])
+  @@index([name])
+  @@map("contacts")
+}
+
+model SourceFile {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId          String   @map("project_id") @db.Uuid
+  originalName       String   @map("original_name")
+  mimeType           String   @map("mime_type")
+  storagePath        String   @map("storage_path")
+  sizeBytes          Int      @map("size_bytes")
+  pageCount          Int?     @map("page_count")
+  extractionStatus   String   @default("pending") @map("extraction_status")
+  extractedItemCount Int      @default(0) @map("extracted_item_count")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  items     PunchItem[]
+
+  @@index([projectId])
+  @@map("source_files")
+}
+
+model Template {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  type      String
+  subject   String   @default("")
+  body      String   @db.Text
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("templates")
+}
+
+model ClassificationFeedback {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  originalText  String   @map("original_text") @db.Text
+  originalTrade String   @map("original_trade")
+  correctedTrade String  @map("corrected_trade")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("classification_feedback")
+}
+
+model TradeStep {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  punchItemId String   @map("punch_item_id") @db.Uuid
+  trade       String
+  sequence    Int
+  status      String   @default("waiting")
+  note        String   @default("")
+  dueDate     String?  @map("due_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  punchItem   PunchItem @relation(fields: [punchItemId], references: [id], onDelete: Cascade)
+
+  @@index([punchItemId])
+  @@map("trade_steps")
+}
