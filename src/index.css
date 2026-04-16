@@ -1,20 +1,23 @@
 @import "tailwindcss";
 
 @theme {
+  --color-cblack: #09090B;
   --color-g50: #FAFAFA;
   --color-g100: #E8E8EC;
-  --color-g200: #D1D1D8;
-  --color-g300: #A9A9B4;
+  --color-g200: #D8D8DE;
+  --color-g300: #C0C0C8;
   --color-g400: #737380;
-  --color-g500: #5A5A66;
-  --color-g600: #3D3D47;
+  --color-g500: #6E6E78;
+  --color-g600: #4A4A54;
   --color-g700: #1A1A22;
   --color-g800: #F8F8FA;
   --color-g900: #FFFFFF;
   --color-surface: #F2F2F4;
-  --color-surface-2: #E8E8EC;
+  --color-surface-2: #EAEAED;
   --color-mar: #C45A2C;
-  --color-mar-light: #D4724A;
+  --color-mar-l: rgba(196, 90, 44, 0.08);
+  --color-mar-m: rgba(196, 90, 44, 0.18);
+  --color-mar-light: #D4703C;
 
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-display: 'Barlow Condensed', sans-serif;
@@ -34,6 +37,8 @@ body {
   line-height: 1.55;
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
 }
 
 #root {
@@ -45,4 +50,44 @@ body {
   margin: 0 auto;
   padding: 0 20px;
   min-height: 100dvh;
+}
+
+/* Prevent iOS zoom on input focus */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Form element resets */
+input, button, textarea, select {
+  font: inherit;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #C0C0C8;
+  border-radius: 2px;
+}
+
+/* Toast animations */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+
+/* Pulse animation */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
