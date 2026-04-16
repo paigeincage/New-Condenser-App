@@ -8,6 +8,8 @@ import { Project } from './pages/Project';
 import { Intake } from './pages/Intake';
 import { Contacts } from './pages/Contacts';
 import { Settings } from './pages/Settings';
+import { Dashboard } from './pages/Dashboard';
+import { Lots } from './pages/Lots';
 
 function AppShell() {
   return (
@@ -30,6 +32,8 @@ export default function App() {
             <Route path="/project/:id/intake" element={<Intake />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/lots" element={<Lots />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

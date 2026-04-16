@@ -1,17 +1,51 @@
 import Dexie, { type Table } from 'dexie';
 import type { Project, PunchItem, Contact } from '../types';
 
+export interface Lot {
+  id?: number;
+  lotBlock: string;
+  address: string;
+  plan: string;
+  elevation: string;
+  scarStage: string;
+  productType: string;
+  fieldContact: string;
+  buyer?: string;
+  vfdDate: string;
+  estFinish: string;
+  currentTask: string;
+  taskDays: number;
+  updatedAt: string;
+  notes?: string;
+  createdAt: number;
+}
+
+export interface EmailRef {
+  id?: number;
+  lotId?: number;
+  trade?: string;
+  subject: string;
+  from: string;
+  date: string;
+  snippet: string;
+  flagged: number; // 0 or 1 for indexing
+}
+
 export class CondenserDB extends Dexie {
   projects!: Table<Project>;
   items!: Table<PunchItem>;
   contacts!: Table<Contact>;
+  lots!: Table<Lot>;
+  emails!: Table<EmailRef>;
 
   constructor() {
     super('CondenserExperimentalDB');
-    this.version(1).stores({
+    this.version(2).stores({
       projects: 'id, address, community, status',
       items: 'id, projectId, trade, status',
       contacts: 'id, name, trade',
+      lots: '++id, lotBlock, address, scarStage, vfdDate, fieldContact',
+      emails: '++id, lotId, trade, date, flagged',
     });
   }
 }

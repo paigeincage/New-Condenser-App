@@ -75,6 +75,13 @@ export function Home() {
         )}
 
         <button
+          onClick={() => nav('/dashboard')}
+          className="w-full py-[18px] rounded-[10px] bg-surface-2 text-cblack font-semibold text-[15px] hover:bg-mar-l hover:text-mar transition-colors border-[1.5px] border-g200"
+        >
+          Command Center
+        </button>
+
+        <button
           onClick={() => nav('/contacts')}
           className="w-full py-[18px] rounded-[10px] bg-surface-2 text-cblack font-semibold text-[15px] hover:bg-mar-l hover:text-mar transition-colors border-[1.5px] border-g200"
         >
