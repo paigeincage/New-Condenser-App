@@ -1,0 +1,471 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.cdnfonts.com/css/open-dyslexic');
+
+/* =============================================
+   Color tokens — drive the whole app
+   Swap on html[data-theme="dark|light"]
+   ============================================= */
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+:root,
+html[data-theme="light"] {
+  /* Neutrals — warm white to black */
+  --bg: #FAFAF8;
+  --bg-2: #F3F0EC;
+  --card: #FFFFFF;
+  --card-2: #F0EDEA;
+  --card-3: #E8E5E1;
+  --border: #E4E1DD;
+  --border-2: #D4D0CB;
+  --text: #1A1A22;
+  --text-2: #555560;
+  --text-3: #8A8A94;
+  --text-4: #B0B0B8;
+
+  /* Brand — Texas A&M maroon (true on light) */
+  --accent: #500000;
+  --accent-hover: #6B1020;
+  --accent-deep: #3A0000;
+  --accent-soft: #8B1429;
+  --accent-tint: rgba(80, 0, 0, 0.08);
+  --accent-tint-2: rgba(80, 0, 0, 0.15);
+  --accent-glow: rgba(80, 0, 0, 0.25);
+
+  /* Status */
+  --red: #DC2A3C;
+  --green: #16A34A;
+  --amber: #D97706;
+
+  /* Chart colors (lighter variants for readability) */
+  --chart-1: #7A1028;
+  --chart-2: #B85068;
+
+  /* Scrollbar */
+  --scroll-thumb: #D4D0CB;
+
+  /* Tailwind compat (legacy — some components still use these) */
+  --color-cblack: #1A1A22;
+  --color-g50: #FAFAF8;
+  --color-g100: #F0EDEA;
+  --color-g200: #E4E1DD;
+  --color-g300: #D4D0CB;
+  --color-g400: #8A8A94;
+  --color-g500: #555560;
+  --color-g600: #3A3A42;
+  --color-g700: #1A1A22;
+  --color-g800: #F8F8FA;
+  --color-g900: #FFFFFF;
+  --color-surface: #F3F0EC;
+  --color-surface-2: #E8E5E1;
+  --color-mar: #500000;
+  --color-mar-l: rgba(80, 0, 0, 0.08);
+  --color-mar-m: rgba(80, 0, 0, 0.18);
+  --color-mar-light: #6B1020;
+}
+
+html[data-theme="dark"] {
+  /* Neutrals — near-black to white */
+  --bg: #0F1012;
+  --bg-2: #151619;
+  --card: #1A1C1F;
+  --card-2: #222428;
+  --card-3: #2A2D31;
+  --border: #2D2F34;
+  --border-2: #3A3D42;
+  --text: #F2F3F5;
+  --text-2: #A8ABB2;
+  --text-3: #72767C;
+  --text-4: #4A4D52;
+
+  /* Brand — brighter maroon for visibility on dark */
+  --accent: #8B1429;
+  --accent-hover: #A81D37;
+  --accent-deep: #6B0C1F;
+  --accent-soft: #C93D54;
+  --accent-tint: rgba(139, 20, 41, 0.12);
+  --accent-tint-2: rgba(139, 20, 41, 0.22);
+  --accent-glow: rgba(168, 29, 55, 0.35);
+
+  /* Status */
+  --red: #FF6B6B;
+  --green: #7EE8A8;
+  --amber: #FFB454;
+
+  /* Chart colors */
+  --chart-1: #C93D54;
+  --chart-2: #8B1429;
+
+  --scroll-thumb: #2D2F34;
+
+  /* Tailwind compat overrides */
+  --color-cblack: #F2F3F5;
+  --color-g50: #151619;
+  --color-g100: #1A1C1F;
+  --color-g200: #2D2F34;
+  --color-g300: #3A3D42;
+  --color-g400: #72767C;
+  --color-g500: #A8ABB2;
+  --color-g600: #D4D6DB;
+  --color-g700: #F2F3F5;
+  --color-g800: #151619;
+  --color-g900: #0F1012;
+  --color-surface: #1A1C1F;
+  --color-surface-2: #222428;
+  --color-mar: #8B1429;
+  --color-mar-l: rgba(139, 20, 41, 0.12);
+  --color-mar-m: rgba(139, 20, 41, 0.22);
+  --color-mar-light: #A81D37;
+}
+
+/* ============================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  --font-scale: 1;
+  font-size: calc(16px * var(--font-scale));
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.55;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+/* Subtle blueprint grid overlay + radial glow */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.35;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 0%, var(--accent-tint), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, var(--accent-tint), transparent 50%);
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+.app-shell {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 20px;
+  min-height: 100dvh;
+}
+
+.app-shell-wide {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  min-height: 100dvh;
+}
+@media (min-width: 1024px) {
+  .app-shell-wide {
+    padding: 0 32px;
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 2px;
+}
+
+/* =============================================
+   Typography utilities
+   ============================================= */
+.font-display {
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: -0.01em;
+}
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* =============================================
+   Card recipe — applied to all cards across app
+   ============================================= */
+.app-card {
+  position: relative;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+}
+.app-card::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 12%; right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--accent-glow) 50%, transparent 100%);
+  opacity: 0.6;
+  transition: opacity 0.25s ease, left 0.25s ease, right 0.25s ease;
+  pointer-events: none;
+}
+.app-card:hover {
+  border-color: var(--accent-glow);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -12px var(--accent-glow);
+}
+.app-card:hover::before {
+  opacity: 1;
+  left: 6%;
+  right: 6%;
+}
+.app-card--interactive {
+  cursor: pointer;
+}
+
+/* Chip — same everywhere */
+.app-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--accent-tint);
+  color: var(--accent);
+  border: 1px solid var(--accent-tint-2);
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+html[data-theme="dark"] .app-chip {
+  color: var(--accent-soft);
+}
+
+/* Primary button */
+.app-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+  border-radius: 10px;
+  border: 2px solid var(--accent);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  cursor: pointer;
+}
+.app-btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.app-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.app-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--card-2);
+  color: var(--text);
+  font-weight: 700;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+}
+.app-btn-ghost:hover {
+  border-color: var(--accent-glow);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+/* Bullet dot with ring for visibility (from dashboard) */
+.app-bullet {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 3px rgba(128, 128, 128, 0.08), 0 0 12px currentColor;
+  flex-shrink: 0;
+}
+
+/* Accessibility */
+html[data-font="dyslexic"] body,
+html[data-font="dyslexic"] input,
+html[data-font="dyslexic"] textarea,
+html[data-font="dyslexic"] select,
+html[data-font="dyslexic"] button {
+  font-family: 'Open Dyslexic', 'OpenDyslexic', 'Inter', system-ui, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+html[data-contrast="high"] body {
+  --text-2: var(--text);
+  --text-3: var(--text-2);
+}
+
+/* Animations */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.5s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up { animation: none; opacity: 1; }
+}
+
+/* =============================================
+   DASHBOARD — uses global theme tokens
+   Now inherits bg / card / accent from :root
+   ============================================= */
+.dash-root {
+  --dash-bg: var(--bg);
+  --dash-bg-2: var(--bg-2);
+  --dash-card: var(--card);
+  --dash-card-2: var(--card-2);
+  --dash-border: var(--border);
+  --dash-border-glow: var(--accent-glow);
+  --dash-cyan: var(--accent);
+  --dash-cyan-dim: var(--accent-deep);
+  --dash-text: var(--text);
+  --dash-text-2: var(--text-2);
+  --dash-text-3: var(--text-3);
+  --dash-red: var(--red);
+  --dash-amber: var(--amber);
+  --dash-green: var(--green);
+  color: var(--text);
+  min-height: 100dvh;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Card variant used on dashboard */
+.dash-card {
+  position: relative;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 24px;
+  padding: 24px;
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+}
+.dash-card::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--accent-glow) 50%, transparent 100%);
+  opacity: 0.7;
+  transition: opacity 0.25s ease, left 0.25s ease, right 0.25s ease;
+  pointer-events: none;
+}
+.dash-card:hover {
+  border-color: var(--accent-glow);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -12px var(--accent-glow);
+}
+.dash-card:hover::before {
+  opacity: 1;
+  left: 4%;
+  right: 4%;
+}
+
+.dash-hero { cursor: default; }
+.dash-hero:hover .dash-hero-number {
+  color: var(--accent);
+  text-shadow: 0 0 24px var(--accent-glow);
+}
+
+.dash-root .recharts-cartesian-grid line { stroke: var(--border); }
+.dash-root .recharts-text { fill: var(--text-2); }
+.dash-root .recharts-tooltip-wrapper { outline: none; }
+
+.dash-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--accent-tint);
+  color: var(--accent);
+  border: 1px solid var(--accent-tint-2);
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+html[data-theme="dark"] .dash-chip {
+  color: var(--accent-soft);
+}
+
+.dash-bullet {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 3px rgba(128, 128, 128, 0.08), 0 0 12px currentColor;
+  flex-shrink: 0;
+}

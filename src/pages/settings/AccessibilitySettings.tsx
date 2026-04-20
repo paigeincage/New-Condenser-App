@@ -1,0 +1,92 @@
+import { Moon, Sun } from 'lucide-react';
+import { TopBar } from '../../components/layout/TopBar';
+import { useProfile, saveProfile } from '../../hooks/useProfile';
+import { useTheme } from '../../hooks/useTheme';
+import { Toggle, Section } from '../../components/settings/SettingsField';
+
+const SCALE_OPTIONS = [
+  { value: 0.9, label: 'Small' },
+  { value: 1.0, label: 'Default' },
+  { value: 1.15, label: 'Large' },
+  { value: 1.3, label: 'Larger' },
+  { value: 1.5, label: 'Largest' },
+];
+
+export function AccessibilitySettings() {
+  const profile = useProfile();
+  const { theme, setTheme } = useTheme();
+
+  return (
+    <div>
+      <TopBar title="Accessibility" back />
+
+      <Section title="Theme" description="Light and dark work everywhere in the app.">
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setTheme('light')}
+            className={`py-3 rounded-lg font-bold text-xs uppercase tracking-wider transition-colors border-2 flex items-center justify-center gap-2 ${
+              theme === 'light'
+                ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                : 'bg-[var(--card-2)] text-[var(--text)] border-[var(--border)] hover:border-[var(--accent-glow)]'
+            }`}
+          >
+            <Sun size={16} strokeWidth={2.5} />
+            Light
+          </button>
+          <button
+            onClick={() => setTheme('dark')}
+            className={`py-3 rounded-lg font-bold text-xs uppercase tracking-wider transition-colors border-2 flex items-center justify-center gap-2 ${
+              theme === 'dark'
+                ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                : 'bg-[var(--card-2)] text-[var(--text)] border-[var(--border)] hover:border-[var(--accent-glow)]'
+            }`}
+          >
+            <Moon size={16} strokeWidth={2.5} />
+            Dark
+          </button>
+        </div>
+      </Section>
+
+      <Section title="Text size" description="Scales text across the entire app.">
+        <div className="grid grid-cols-5 gap-2">
+          {SCALE_OPTIONS.map((o) => {
+            const active = Math.abs(profile.fontScale - o.value) < 0.01;
+            return (
+              <button
+                key={o.value}
+                onClick={() => saveProfile({ fontScale: o.value })}
+                className={`py-2 rounded-lg font-semibold text-xs transition-colors border-2 ${
+                  active
+                    ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                    : 'bg-[var(--card-2)] border-[var(--border)] text-[var(--text)] hover:border-[var(--accent-glow)]'
+                }`}
+                style={{ fontSize: `${12 * o.value}px` }}
+              >
+                Aa
+                <div className="text-[10px] mt-0.5 font-normal">{o.label}</div>
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      <Section title="Font" description="OpenDyslexic is designed to reduce common reading errors.">
+        <Toggle
+          label="Use OpenDyslexic font"
+          hint="A font shaped to help readers with dyslexia"
+          checked={profile.fontChoice === 'dyslexic'}
+          onChange={(v) => saveProfile({ fontChoice: v ? 'dyslexic' : 'default' })}
+        />
+      </Section>
+
+      <Section title="Contrast">
+        <Toggle
+          label="High contrast mode"
+          hint="Darkens secondary text and borders for easier reading"
+          checked={profile.highContrast}
+          onChange={(v) => saveProfile({ highContrast: v })}
+        />
+      </Section>
+    </div>
+  );
+}
