@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '../stores/auth';
 import { api } from '../api/client';
 import { saveProfile } from '../hooks/useProfile';
+import { track } from '../lib/analytics';
 
 interface LoginResponse {
   token: string;
@@ -38,8 +39,10 @@ export function Login() {
         email: res.user.email,
         signOff: firstName || '',
       });
+      track('login_success');
       nav(redirectTo, { replace: true });
     } catch (err) {
+      track('login_error');
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setBusy(false);

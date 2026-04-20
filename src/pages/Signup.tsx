@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '../stores/auth';
 import { api } from '../api/client';
 import { saveProfile } from '../hooks/useProfile';
+import { track } from '../lib/analytics';
 
 interface SignupResponse {
   token: string;
@@ -45,8 +46,10 @@ export function Signup() {
         email: res.user.email,
         signOff: firstName || '',
       });
+      track('signup_success');
       nav('/', { replace: true });
     } catch (err) {
+      track('signup_error');
       setError(err instanceof Error ? err.message : 'Signup failed');
     } finally {
       setBusy(false);
