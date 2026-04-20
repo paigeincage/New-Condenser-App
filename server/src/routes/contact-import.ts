@@ -125,7 +125,7 @@ contactImportRouter.post('/', upload.single('file'), async (req, res) => {
   }
 });
 
-// Confirm import — save parsed contacts to DB
+// Confirm import — save parsed contacts to DB (scoped to current user)
 contactImportRouter.post('/confirm', async (req, res) => {
   const { contacts } = req.body as { contacts: RawContact[] };
   if (!contacts || !contacts.length) {
@@ -135,6 +135,7 @@ contactImportRouter.post('/confirm', async (req, res) => {
 
   const created = await prisma.contact.createMany({
     data: contacts.map((c) => ({
+      userId: req.userId!,
       name: c.name,
       email: c.email || '',
       phone: c.phone || '',

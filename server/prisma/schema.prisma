@@ -18,6 +18,8 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
 
   projects  Project[]
+  contacts  Contact[]
+  templates Template[]
 
   @@map("users")
 }
@@ -68,6 +70,7 @@ model PunchItem {
 
 model Contact {
   id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String?   @map("user_id") @db.Uuid
   name                 String
   email                String    @default("")
   phone                String    @default("")
@@ -78,6 +81,9 @@ model Contact {
   channelOverrideUntil DateTime? @map("channel_override_until")
   createdAt            DateTime  @default(now()) @map("created_at")
 
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
   @@index([trade])
   @@index([name])
   @@map("contacts")
@@ -104,6 +110,7 @@ model SourceFile {
 
 model Template {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
   name      String
   type      String
   subject   String   @default("")
@@ -111,6 +118,9 @@ model Template {
   isDefault Boolean  @default(false) @map("is_default")
   createdAt DateTime @default(now()) @map("created_at")
 
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
   @@map("templates")
 }
 

@@ -7,6 +7,7 @@
 import { Router } from 'express';
 import fs from 'fs';
 import { prisma } from '../lib/prisma.js';
+import { getOwnedSourceFile } from '../lib/ownership.js';
 import { extractPdfText, pdfToImages } from '../services/pdf-to-images.js';
 import { extractWithVision, extractFromImage, extractFromText } from '../services/vision-extract.js';
 import { classifyTextItems } from '../services/text-classify.js';
@@ -33,7 +34,7 @@ function splitTextToItems(text: string): string[] {
 extractRouter.post('/:fileId', async (req, res) => {
   const { fileId } = req.params;
 
-  const file = await prisma.sourceFile.findUnique({ where: { id: fileId } });
+  const file = await getOwnedSourceFile(req.userId!, fileId);
   if (!file) {
     res.status(404).json({ error: 'File not found' });
     return;
