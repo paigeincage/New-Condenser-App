@@ -11,6 +11,14 @@ const INPUT_CLASS =
 
 type Preference = 'email' | 'text' | 'both';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const TRADE_SUGGESTIONS = [
+  'Framing', 'Plumbing', 'Electrical', 'HVAC', 'Drywall', 'Paint', 'Trim', 'Roofing',
+  'Flooring', 'Tile', 'Cabinets', 'Countertops', 'Insulation', 'Siding', 'Landscaping',
+  'Concrete', 'Masonry', 'Windows', 'Doors', 'Garage', 'Cleaning', 'Punch',
+];
+
 export function Contacts() {
   const addToast = useUI((s) => s.addToast);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -40,6 +48,24 @@ export function Contacts() {
     setEditing(null);
     setShowForm(false);
   };
+
+  const validationIssues = (() => {
+    const issues: string[] = [];
+    if (!form.name.trim()) issues.push('Name is required');
+    const needsEmail = form.preferredChannel === 'email' || form.preferredChannel === 'both';
+    const needsPhone = form.preferredChannel === 'text' || form.preferredChannel === 'both';
+    if (needsEmail) {
+      if (!form.email.trim()) issues.push('Email is required for this send preference');
+      else if (!EMAIL_RE.test(form.email.trim())) issues.push('Email format looks off');
+    }
+    if (needsPhone) {
+      const digits = (form.phone.match(/\d/g) || []).length;
+      if (!form.phone.trim()) issues.push('Phone is required for this send preference');
+      else if (digits < 10) issues.push('Phone needs at least 10 digits');
+    }
+    return issues;
+  })();
+  const canSave = validationIssues.length === 0;
 
   const handleSave = async () => {
     try {
@@ -171,8 +197,14 @@ export function Contacts() {
               value={form.trade}
               onChange={(e) => setForm({ ...form, trade: e.target.value })}
               placeholder="Trade"
+              list="trade-suggestions"
               className={INPUT_CLASS}
             />
+            <datalist id="trade-suggestions">
+              {TRADE_SUGGESTIONS.map((t) => (
+                <option key={t} value={t} />
+              ))}
+            </datalist>
           </div>
           <div>
             <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--text-3)] mb-2">
@@ -194,13 +226,20 @@ export function Contacts() {
               ))}
             </div>
           </div>
+          {validationIssues.length > 0 && (
+            <ul className="list-disc pl-5 text-[11px] text-[var(--text-3)] space-y-0.5">
+              {validationIssues.map((issue) => (
+                <li key={issue}>{issue}</li>
+              ))}
+            </ul>
+          )}
           <div className="flex gap-2 pt-1">
             <button onClick={resetForm} className="app-btn-ghost flex-1">
               Cancel
             </button>
             <button
               onClick={handleSave}
-              disabled={!form.name.trim()}
+              disabled={!canSave}
               className="app-btn-primary flex-1 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {editing ? 'Update' : 'Save'}
