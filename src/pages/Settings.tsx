@@ -8,9 +8,11 @@ import {
   Users,
   Eye,
   ChevronRight,
+  LogOut,
 } from 'lucide-react';
 import { TopBar } from '../components/layout/TopBar';
 import { ThemeToggle } from '../components/layout/ThemeToggle';
+import { useAuth } from '../stores/auth';
 
 interface TabLink {
   to: string;
@@ -31,6 +33,14 @@ const TABS: TabLink[] = [
 
 export function Settings() {
   const nav = useNavigate();
+  const user = useAuth((s) => s.user);
+  const clear = useAuth((s) => s.clear);
+
+  const handleLogout = () => {
+    clear();
+    nav('/login', { replace: true });
+  };
+
   return (
     <div>
       <TopBar title="Settings" back right={<ThemeToggle />} />
@@ -60,6 +70,24 @@ export function Settings() {
             </div>
           </button>
         ))}
+
+        <button
+          onClick={handleLogout}
+          className="app-card text-left group animate-fade-up"
+          style={{ animationDelay: `${TABS.length * 0.05}s` }}
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-xl bg-[var(--card-2)] border-2 border-[var(--border)] flex items-center justify-center text-[var(--red)] shrink-0">
+              <LogOut size={20} strokeWidth={2} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-display font-bold text-base uppercase tracking-tight text-[var(--text)]">
+                Log out
+              </div>
+              {user && <div className="text-xs text-[var(--text-3)] mt-0.5 truncate">Signed in as {user.email}</div>}
+            </div>
+          </div>
+        </button>
       </div>
     </div>
   );

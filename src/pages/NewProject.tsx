@@ -11,8 +11,6 @@ import { useUI } from '../stores/ui';
 
 type Step = 'info' | 'upload' | 'review' | 'done';
 
-const TEMP_USER_ID = '00000000-0000-0000-0000-000000000001';
-
 const INPUT_CLASS =
   'w-full px-4 py-3 rounded-xl border-2 border-[var(--border)] bg-[var(--card-2)] text-[var(--text)] placeholder:text-[var(--text-3)] focus:border-[var(--accent)] focus:outline-none transition-colors text-base';
 
@@ -39,7 +37,6 @@ export function NewProject() {
         address: address.trim(),
         community: community.trim(),
         lot: lot.trim(),
-        userId: TEMP_USER_ID,
       });
       setProjectId(project.id);
       setStep('upload');

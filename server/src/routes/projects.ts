@@ -44,9 +44,14 @@ projectsRouter.get('/:id', async (req, res) => {
 
 // Create project
 projectsRouter.post('/', async (req, res) => {
-  const { address, community, lot, date, userId } = req.body;
-  if (!address || !userId) {
-    res.status(400).json({ error: 'address and userId are required' });
+  const { address, community, lot, date } = req.body;
+  const userId = req.userId;
+  if (!userId) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  if (!address) {
+    res.status(400).json({ error: 'address is required' });
     return;
   }
   const project = await prisma.project.create({

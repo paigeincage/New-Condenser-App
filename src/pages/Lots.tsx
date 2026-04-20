@@ -54,7 +54,7 @@ export function Lots() {
           elevation: iElev >= 0 ? (row[iElev]?.trim() || '') : '',
           scarStage: row[iStage]?.trim() || 'Start',
           productType: iProduct >= 0 ? (row[iProduct]?.trim() || '') : '',
-          fieldContact: iContact >= 0 ? (row[iContact]?.trim() || '') : config.user.name.split(' ').reverse().join(', '),
+          fieldContact: iContact >= 0 ? (row[iContact]?.trim() || '') : '',
           buyer: iBuyer >= 0 ? row[iBuyer]?.trim() : undefined,
           vfdDate: iVfd >= 0 ? (row[iVfd]?.trim() || '') : '',
           estFinish: iFinish >= 0 ? (row[iFinish]?.trim() || '') : '',
@@ -92,7 +92,10 @@ export function Lots() {
         }
       />
 
-      <p className="text-xs text-g400 -mt-4 mb-4">{filtered.length} lots in {config.user.community}</p>
+      <p className="text-xs text-g400 -mt-4 mb-4">
+        {filtered.length} {filtered.length === 1 ? 'lot' : 'lots'}
+        {config.user.community ? ` in ${config.user.community}` : ''}
+      </p>
 
       {/* Search + filters */}
       <input

@@ -1,10 +1,12 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Toast } from './components/layout/Toast';
 import { BottomNav } from './components/layout/BottomNav';
 import { SplashScreen } from './components/layout/SplashScreen';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { useAccessibility } from './hooks/useAccessibility';
 import { useTheme } from './hooks/useTheme';
+import { useAuth } from './stores/auth';
 
 import { Home } from './pages/Home';
 import { NewProject } from './pages/NewProject';
@@ -14,6 +16,8 @@ import { Contacts } from './pages/Contacts';
 import { Settings } from './pages/Settings';
 import { Dashboard } from './pages/Dashboard';
 import { Lots } from './pages/Lots';
+import { Login } from './pages/Login';
+import { Signup } from './pages/Signup';
 import { ProfileSettings } from './pages/settings/ProfileSettings';
 import { CommunitiesSettings } from './pages/settings/CommunitiesSettings';
 import { TemplatesSettings } from './pages/settings/TemplatesSettings';
@@ -65,29 +69,44 @@ export default function App() {
       {showSplash && <SplashScreen onDismiss={() => setShowSplash(false)} />}
       <main className="pb-24">
         <Routes>
-          <Route element={<AppShell />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/new" element={<NewProject />} />
-            <Route path="/project/:id" element={<Project />} />
-            <Route path="/project/:id/intake" element={<Intake />} />
-            <Route path="/contacts" element={<Contacts />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/settings/profile" element={<ProfileSettings />} />
-            <Route path="/settings/communities" element={<CommunitiesSettings />} />
-            <Route path="/settings/templates" element={<TemplatesSettings />} />
-            <Route path="/settings/notifications" element={<NotificationsSettings />} />
-            <Route path="/settings/field-language" element={<FieldLanguageSettings />} />
-            <Route path="/settings/contacts" element={<ContactsSettings />} />
-            <Route path="/settings/accessibility" element={<AccessibilitySettings />} />
-            <Route path="/lots" element={<Lots />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-          <Route element={<AppShellWide />}>
-            <Route path="/dashboard" element={<Dashboard />} />
+          {/* Public */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+
+          {/* Authenticated */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppShell />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/new" element={<NewProject />} />
+              <Route path="/project/:id" element={<Project />} />
+              <Route path="/project/:id/intake" element={<Intake />} />
+              <Route path="/contacts" element={<Contacts />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings/profile" element={<ProfileSettings />} />
+              <Route path="/settings/communities" element={<CommunitiesSettings />} />
+              <Route path="/settings/templates" element={<TemplatesSettings />} />
+              <Route path="/settings/notifications" element={<NotificationsSettings />} />
+              <Route path="/settings/field-language" element={<FieldLanguageSettings />} />
+              <Route path="/settings/contacts" element={<ContactsSettings />} />
+              <Route path="/settings/accessibility" element={<AccessibilitySettings />} />
+              <Route path="/lots" element={<Lots />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+            <Route element={<AppShellWide />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Route>
           </Route>
         </Routes>
       </main>
-      <BottomNav />
+      <ConditionalBottomNav />
     </BrowserRouter>
   );
+}
+
+function ConditionalBottomNav() {
+  const location = useLocation();
+  const token = useAuth((s) => s.token);
+  const hideOn = ['/login', '/signup'];
+  if (!token || hideOn.includes(location.pathname)) return null;
+  return <BottomNav />;
 }
