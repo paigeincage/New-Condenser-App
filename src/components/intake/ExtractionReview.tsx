@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Check, Copy, Download, Mail } from 'lucide-react';
 import type { ExtractedItem } from '../../types';
 
 const TRADES = [
@@ -27,8 +28,7 @@ export function ExtractionReview({ items, onItemsChange, onCommit, loading }: Ex
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const toggleSelect = (index: number) => {
-    const next = items.map((item, i) => i === index ? { ...item, selected: !item.selected } : item);
-    onItemsChange(next);
+    onItemsChange(items.map((item, i) => (i === index ? { ...item, selected: !item.selected } : item)));
   };
 
   const toggleAll = () => {
@@ -37,74 +37,116 @@ export function ExtractionReview({ items, onItemsChange, onCommit, loading }: Ex
   };
 
   const updateItem = (index: number, updates: Partial<ReviewItem>) => {
-    const next = items.map((item, i) => i === index ? Object.assign({}, item, updates) : item);
-    onItemsChange(next);
+    onItemsChange(items.map((item, i) => (i === index ? Object.assign({}, item, updates) : item)));
   };
 
   const selectedCount = items.filter((i) => i.selected).length;
 
-  // Group items by trade
-  const byTrade = items.reduce<Record<string, { items: ReviewItem[]; indices: number[] }>>((acc, item, i) => {
-    const trade = item.trade || 'Uncategorized';
-    if (!acc[trade]) acc[trade] = { items: [], indices: [] };
-    acc[trade].items.push(item);
-    acc[trade].indices.push(i);
-    return acc;
-  }, {});
+  const byTrade = items.reduce<Record<string, { items: ReviewItem[]; indices: number[] }>>(
+    (acc, item, i) => {
+      const trade = item.trade || 'Uncategorized';
+      if (!acc[trade]) acc[trade] = { items: [], indices: [] };
+      acc[trade].items.push(item);
+      acc[trade].indices.push(i);
+      return acc;
+    },
+    {}
+  );
+
+  const copyList = () => {
+    const selected = items.filter((i) => i.selected);
+    const text = selected
+      .map((item, i) => `${i + 1}. [${item.trade}] ${item.text}${item.location ? ` (${item.location})` : ''}`)
+      .join('\n');
+    navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
+  };
+
+  const downloadList = () => {
+    const selected = items.filter((i) => i.selected);
+    const text = selected
+      .map((item, i) => `${i + 1}. [${item.trade}] ${item.text}${item.location ? ` (${item.location})` : ''}`)
+      .join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `punch-list-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const emailList = () => {
+    const selected = items.filter((i) => i.selected);
+    const text = selected
+      .map((item, i) => `${i + 1}. [${item.trade}] ${item.text}${item.location ? ` (${item.location})` : ''}`)
+      .join('\n');
+    const subject = `Punch List — ${selectedCount} Items`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+  };
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button onClick={toggleAll} className="text-sm text-mar font-medium hover:underline">
+    <div className="space-y-4 pb-6">
+      {items.length === 0 ? (
+        <div className="app-card text-center py-10">
+          <p className="text-sm font-bold text-[var(--text)] mb-1">No items extracted</p>
+          <p className="text-xs text-[var(--text-3)] leading-relaxed">
+            Claude didn't find any punch items. Upload a different file, or go back and
+            add items manually from the project page.
+          </p>
+        </div>
+      ) : (
+        <div className="app-card !p-3 flex items-center justify-between">
+          <button
+            onClick={toggleAll}
+            className="text-xs font-bold uppercase tracking-wider text-[var(--accent)] hover:underline"
+          >
             {items.every((i) => i.selected) ? 'Deselect all' : 'Select all'}
           </button>
-          <span className="text-sm text-g400">
-            {selectedCount} of {items.length} items selected
+          <span className="text-xs text-[var(--text-3)] font-mono tabular-nums">
+            {selectedCount}/{items.length} selected
           </span>
         </div>
-      </div>
+      )}
 
-      {/* Items grouped by trade */}
       {Object.entries(byTrade).map(([trade, group]) => (
-        <div key={trade} className="rounded-xl border border-g100 overflow-hidden">
-          <div className="bg-surface px-4 py-2.5 flex items-center justify-between">
-            <span className="text-sm font-semibold text-g700">{trade}</span>
-            <span className="text-xs text-g400 bg-white px-2 py-0.5 rounded-full">
+        <div key={trade} className="app-card !p-0 overflow-hidden">
+          <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--border)]">
+            <span className="font-display text-sm font-bold uppercase tracking-wider text-[var(--text)]">
+              {trade}
+            </span>
+            <span className="font-mono text-[10px] text-[var(--text-3)] bg-[var(--card-2)] px-2 py-0.5 rounded-full border border-[var(--border)] tabular-nums">
               {group.items.length}
             </span>
           </div>
 
-          <div className="divide-y divide-g100">
+          <div className="divide-y divide-[var(--border)]">
             {group.items.map((item, j) => {
               const globalIndex = group.indices[j]!;
               const isEditing = editingId === globalIndex;
-
               return (
                 <div
                   key={globalIndex}
-                  className={`px-4 py-3 transition-colors ${item.selected ? 'bg-white' : 'bg-surface-2/30'}`}
+                  className={`px-4 py-3 transition-colors ${
+                    item.selected ? 'bg-[var(--card)]' : 'bg-[var(--card-2)]/50 opacity-60'
+                  }`}
                 >
                   <div className="flex items-start gap-3">
-                    {/* Checkbox */}
                     <button
                       onClick={() => toggleSelect(globalIndex)}
-                      className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors
-                        ${item.selected ? 'bg-mar border-mar' : 'border-g300 hover:border-mar'}`}
+                      className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                        item.selected
+                          ? 'bg-[var(--accent)] border-[var(--accent)]'
+                          : 'border-[var(--border-2)] hover:border-[var(--accent)]'
+                      }`}
+                      aria-label={item.selected ? 'Deselect' : 'Select'}
                     >
-                      {item.selected && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
+                      {item.selected && <Check size={12} strokeWidth={3} className="text-white" />}
                     </button>
 
                     <div className="flex-1 min-w-0">
-                      {/* Item text */}
                       {isEditing ? (
                         <textarea
-                          className="w-full text-sm border border-g200 rounded-lg p-2 focus:outline-none focus:border-mar resize-none"
+                          className="w-full px-3 py-2 rounded-lg border-2 border-[var(--border)] bg-[var(--card-2)] text-[var(--text)] focus:border-[var(--accent)] focus:outline-none resize-none text-sm"
                           rows={2}
                           value={item.text}
                           onChange={(e) => updateItem(globalIndex, { text: e.target.value })}
@@ -113,60 +155,67 @@ export function ExtractionReview({ items, onItemsChange, onCommit, loading }: Ex
                         />
                       ) : (
                         <p
-                          className="text-sm text-g700 cursor-pointer hover:text-mar"
+                          className="text-sm font-semibold text-[var(--text)] cursor-pointer hover:text-[var(--accent)]"
                           onClick={() => setEditingId(globalIndex)}
                         >
                           {item.text}
                         </p>
                       )}
 
-                      {/* Meta row */}
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        {/* Priority badge */}
+                      <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                         {item.priority !== 'normal' && (
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                            item.priority === 'hot' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                          }`}>
+                          <span
+                            className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                              item.priority === 'hot'
+                                ? 'bg-[var(--red)]/10 text-[var(--red)] border-[var(--red)]/30'
+                                : 'bg-[var(--amber)]/10 text-[var(--amber)] border-[var(--amber)]/30'
+                            }`}
+                          >
                             {item.priority}
                           </span>
                         )}
-
-                        {/* Repaired badge */}
                         {item.repaired && (
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--green)]/10 text-[var(--green)] border border-[var(--green)]/30">
                             repaired
                           </span>
                         )}
-
-                        {/* Location */}
                         {item.location && (
-                          <span className="text-xs text-g400">{item.location}</span>
+                          <span className="text-[10px] font-mono uppercase text-[var(--text-3)]">
+                            {item.location}
+                          </span>
                         )}
+                        <span className="text-[10px] text-[var(--text-4)] font-mono truncate max-w-[100px]">
+                          {item.fileName}
+                        </span>
 
-                        {/* File name */}
-                        <span className="text-xs text-g400 font-mono">{item.fileName}</span>
-
-                        {/* Trade selector */}
                         <select
-                          className="text-xs border border-g200 rounded px-1.5 py-0.5 text-g600 bg-white ml-auto"
+                          className="text-[11px] border border-[var(--border)] rounded px-1.5 py-0.5 text-[var(--text-2)] bg-[var(--card-2)] ml-auto focus:outline-none focus:border-[var(--accent)]"
                           value={item.trade}
                           onChange={(e) => updateItem(globalIndex, { trade: e.target.value })}
                         >
                           {TRADES.map((t) => (
-                            <option key={t} value={t}>{t}</option>
+                            <option key={t} value={t}>
+                              {t}
+                            </option>
                           ))}
                         </select>
 
-                        {/* Priority toggle */}
                         <button
                           onClick={() => {
-                            const next = item.priority === 'normal' ? 'hot' : item.priority === 'hot' ? 'elevated' : 'normal';
+                            const next =
+                              item.priority === 'normal'
+                                ? 'hot'
+                                : item.priority === 'hot'
+                                  ? 'elevated'
+                                  : 'normal';
                             updateItem(globalIndex, { priority: next as ExtractedItem['priority'] });
                           }}
-                          className={`w-5 h-5 rounded-full flex items-center justify-center text-xs transition-colors ${
-                            item.priority === 'hot' ? 'bg-red-500 text-white' :
-                            item.priority === 'elevated' ? 'bg-amber-500 text-white' :
-                            'bg-g200 text-g400 hover:bg-g300'
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
+                            item.priority === 'hot'
+                              ? 'bg-[var(--red)] text-white'
+                              : item.priority === 'elevated'
+                                ? 'bg-[var(--amber)] text-white'
+                                : 'bg-[var(--card-2)] text-[var(--text-3)] border border-[var(--border)] hover:border-[var(--accent)]'
                           }`}
                           title="Toggle priority"
                         >
@@ -182,65 +231,48 @@ export function ExtractionReview({ items, onItemsChange, onCommit, loading }: Ex
         </div>
       ))}
 
-      {/* Action buttons */}
-      <div className="space-y-2">
-        <button
-          onClick={() => onCommit(items.filter((i) => i.selected))}
-          disabled={selectedCount === 0 || loading}
-          className="w-full py-3.5 rounded-xl font-semibold text-white bg-mar hover:bg-mar-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-base"
-        >
-          {loading ? 'Adding...' : `Add ${selectedCount} Item${selectedCount !== 1 ? 's' : ''} to Project`}
-        </button>
+      {items.length > 0 && (
+        <div className="app-card space-y-2 !p-4">
+          <button
+            onClick={() => onCommit(items.filter((i) => i.selected))}
+            disabled={selectedCount === 0 || loading}
+            className="app-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {loading
+              ? 'Adding…'
+              : selectedCount === 0
+                ? 'Select items above'
+                : `Add ${selectedCount} item${selectedCount !== 1 ? 's' : ''} to project`}
+          </button>
 
-        {/* Export / Send right from review */}
-        {selectedCount > 0 && (
           <div className="grid grid-cols-3 gap-2">
             <button
-              onClick={() => {
-                const selected = items.filter((i) => i.selected);
-                const text = selected.map((item, i) => {
-                  const loc = item.location ? ` (${item.location})` : '';
-                  return `${i + 1}. [${item.trade}] ${item.text}${loc}`;
-                }).join('\n');
-                navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
-              }}
-              className="py-2.5 rounded-xl border-[1.5px] border-g200 text-g600 font-medium text-sm hover:border-mar hover:text-mar transition-colors"
+              onClick={copyList}
+              disabled={selectedCount === 0}
+              className="app-btn-ghost text-xs py-2 disabled:opacity-40"
             >
+              <Copy size={12} strokeWidth={2.5} />
               Copy
             </button>
             <button
-              onClick={() => {
-                const selected = items.filter((i) => i.selected);
-                const text = selected.map((item, i) => {
-                  const loc = item.location ? ` (${item.location})` : '';
-                  return `${i + 1}. [${item.trade}] ${item.text}${loc}`;
-                }).join('\n');
-                const blob = new Blob([text], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.href = url; a.download = `punch-list-${new Date().toISOString().slice(0,10)}.txt`;
-                a.click(); URL.revokeObjectURL(url);
-              }}
-              className="py-2.5 rounded-xl border-[1.5px] border-g200 text-g600 font-medium text-sm hover:border-mar hover:text-mar transition-colors"
+              onClick={downloadList}
+              disabled={selectedCount === 0}
+              className="app-btn-ghost text-xs py-2 disabled:opacity-40"
             >
+              <Download size={12} strokeWidth={2.5} />
               Download
             </button>
             <button
-              onClick={() => {
-                const selected = items.filter((i) => i.selected);
-                const text = selected.map((item, i) => {
-                  const loc = item.location ? ` (${item.location})` : '';
-                  return `${i + 1}. [${item.trade}] ${item.text}${loc}`;
-                }).join('\n');
-                const subject = `Punch List — ${selectedCount} Items`;
-                window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
-              }}
-              className="py-2.5 rounded-xl border-[1.5px] border-g200 text-g600 font-medium text-sm hover:border-mar hover:text-mar transition-colors"
+              onClick={emailList}
+              disabled={selectedCount === 0}
+              className="app-btn-ghost text-xs py-2 disabled:opacity-40"
             >
+              <Mail size={12} strokeWidth={2.5} />
               Email
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

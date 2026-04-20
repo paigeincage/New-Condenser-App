@@ -1,6 +1,100 @@
 import Dexie, { type Table } from 'dexie';
 import type { Project, PunchItem, Contact } from '../types';
 
+export type GreetingWord = 'Howdy' | 'Hey' | 'Welcome' | "Mornin'" | 'Hola';
+export type FontChoice = 'default' | 'dyslexic';
+export type SendPreference = 'text' | 'email' | 'both';
+export type ThemeMode = 'light' | 'dark';
+
+export interface Profile {
+  id: 'main';
+  // Profile tab
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  companyName: string;
+  signOff: string;
+  photoDataUrl?: string;
+  greetingEnabled: boolean;
+  greetingWord: GreetingWord;
+
+  // Message templates tab
+  emailSubject: string;
+  emailIntro: string;
+  emailSignOff: string;
+  textIntro: string;
+  textSignOff: string;
+
+  // Notifications tab
+  notifySendConfirmations: boolean;
+  notifyDailySummary: boolean;
+  notifyWeeklySummary: boolean;
+  notifyStageChanges: boolean;
+  quietHoursEnabled: boolean;
+  quietHoursStart: string; // "19:00"
+  quietHoursEnd: string; // "07:00"
+
+  // Contacts default routing
+  defaultSendPreference: SendPreference;
+
+  // Accessibility tab
+  fontChoice: FontChoice;
+  fontScale: number; // 1.0 = default; 0.9 | 1.0 | 1.15 | 1.3 | 1.5
+  highContrast: boolean;
+  themeMode?: ThemeMode; // undefined = follow system
+
+  // Weather source
+  weatherCommunityId?: string;
+
+  updatedAt: string;
+}
+
+export interface Community {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  isDefault: boolean;
+  createdAt: string;
+}
+
+export interface CommunityHome {
+  id: string;
+  communityId: string;
+  address: string;
+  lot?: string;
+  stage: 'Pre-construction' | 'Framing' | 'Drywall' | 'Paint' | 'Trim' | 'Tile' | 'Punch' | 'Complete';
+  startDate?: string;
+  targetCompletionDate?: string;
+  createdAt: string;
+}
+
+export interface FieldLangEntry {
+  id: string;
+  term: string;
+  trade: string;
+  aliases: string[];
+  createdAt: string;
+}
+
+export interface AiUsageRecord {
+  month: string; // YYYY-MM
+  voiceSeconds: number;
+  visionCalls: number;
+  estimatedCostCents: number;
+  updatedAt: string;
+}
+
+export interface ItemPhoto {
+  id: string;
+  itemId: string;      // PunchItem id from server
+  projectId: string;
+  dataUrl: string;     // base64 image
+  takenAt: string;
+  createdAt: number;
+}
+
 export interface Lot {
   id?: number;
   lotBlock: string;
@@ -37,6 +131,12 @@ export class CondenserDB extends Dexie {
   contacts!: Table<Contact>;
   lots!: Table<Lot>;
   emails!: Table<EmailRef>;
+  profile!: Table<Profile>;
+  communities!: Table<Community>;
+  communityHomes!: Table<CommunityHome>;
+  fieldLanguage!: Table<FieldLangEntry>;
+  aiUsage!: Table<AiUsageRecord, string>;
+  itemPhotos!: Table<ItemPhoto, string>;
 
   constructor() {
     super('CondenserExperimentalDB');
@@ -46,6 +146,41 @@ export class CondenserDB extends Dexie {
       contacts: 'id, name, trade',
       lots: '++id, lotBlock, address, scarStage, vfdDate, fieldContact',
       emails: '++id, lotId, trade, date, flagged',
+    });
+    this.version(3).stores({
+      projects: 'id, address, community, status',
+      items: 'id, projectId, trade, status',
+      contacts: 'id, name, trade',
+      lots: '++id, lotBlock, address, scarStage, vfdDate, fieldContact',
+      emails: '++id, lotId, trade, date, flagged',
+      profile: 'id',
+      communities: 'id, isDefault',
+      communityHomes: 'id, communityId, stage',
+    });
+    this.version(4).stores({
+      projects: 'id, address, community, status',
+      items: 'id, projectId, trade, status',
+      contacts: 'id, name, trade',
+      lots: '++id, lotBlock, address, scarStage, vfdDate, fieldContact',
+      emails: '++id, lotId, trade, date, flagged',
+      profile: 'id',
+      communities: 'id, isDefault',
+      communityHomes: 'id, communityId, stage',
+      fieldLanguage: 'id, trade',
+      aiUsage: 'month',
+    });
+    this.version(5).stores({
+      projects: 'id, address, community, status',
+      items: 'id, projectId, trade, status',
+      contacts: 'id, name, trade',
+      lots: '++id, lotBlock, address, scarStage, vfdDate, fieldContact',
+      emails: '++id, lotId, trade, date, flagged',
+      profile: 'id',
+      communities: 'id, isDefault',
+      communityHomes: 'id, communityId, stage',
+      fieldLanguage: 'id, trade',
+      aiUsage: 'month',
+      itemPhotos: 'id, itemId, projectId',
     });
   }
 }

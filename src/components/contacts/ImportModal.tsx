@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { Upload, X, Loader2 } from 'lucide-react';
 import { apiUpload, api } from '../../api/client';
 import { useUI } from '../../stores/ui';
 
@@ -62,40 +63,60 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
   };
 
   const updateContact = (index: number, field: keyof ParsedContact, value: string) => {
-    setParsed((p) => p.map((c, i) => i === index ? { ...c, [field]: value } : c));
+    setParsed((p) => p.map((c, i) => (i === index ? { ...c, [field]: value } : c)));
   };
 
+  const fieldCls =
+    'text-xs text-[var(--text-2)] bg-transparent focus:outline-none focus-visible:border-b focus-visible:border-[var(--accent)] placeholder:text-[var(--text-4)]';
+
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
-      <div className="bg-white w-full sm:max-w-lg max-h-[90vh] rounded-t-2xl sm:rounded-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className="p-5 pb-3 border-b border-g100">
-          <h3 className="text-lg font-bold text-g700">Import Contacts</h3>
-          <p className="text-sm text-g400 mt-0.5">
-            Upload a file to bulk-import contacts
-          </p>
+    <div
+      className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[var(--card)] border-2 border-[var(--border)] w-full sm:max-w-lg max-h-[90vh] rounded-t-2xl sm:rounded-2xl flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-5 pb-4 border-b border-[var(--border)] flex items-start justify-between">
+          <div>
+            <h3 className="font-display text-lg font-extrabold uppercase tracking-tight text-[var(--text)]">
+              Import Contacts
+            </h3>
+            <p className="text-xs text-[var(--text-3)] mt-1">
+              Upload a file to bulk-import contacts
+            </p>
+          </div>
+          <button onClick={onClose} className="text-[var(--text-3)] hover:text-[var(--text)] transition-colors">
+            <X size={20} strokeWidth={2} />
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {parsed.length === 0 ? (
             <>
-              {/* File picker */}
               <div
-                className="border-2 border-dashed border-g200 rounded-xl p-8 text-center cursor-pointer hover:border-mar transition-colors"
+                className="border-2 border-dashed border-[var(--border)] rounded-2xl p-8 text-center cursor-pointer hover:border-[var(--accent-glow)] hover:bg-[var(--accent-tint)] transition-colors"
                 onClick={() => fileRef.current?.click()}
               >
                 {uploading ? (
                   <div>
-                    <div className="w-8 h-8 border-2 border-mar border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                    <p className="text-sm text-g400">Reading file...</p>
+                    <Loader2
+                      size={32}
+                      className="animate-spin mx-auto mb-3 text-[var(--accent)]"
+                      strokeWidth={2}
+                    />
+                    <p className="text-sm text-[var(--text-2)] font-semibold">Reading file…</p>
                   </div>
                 ) : (
                   <>
-                    <svg className="w-10 h-10 text-g300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p className="text-sm font-semibold text-g700 mb-1">Tap to select file</p>
-                    <p className="text-xs text-g400">Supports .vcf, .csv, .xlsx, .xls</p>
+                    <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-[var(--card-2)] border-2 border-[var(--border)] flex items-center justify-center text-[var(--accent)]">
+                      <Upload size={22} strokeWidth={2} />
+                    </div>
+                    <p className="font-display text-base font-bold uppercase tracking-tight text-[var(--text)] mb-1">
+                      Tap to select file
+                    </p>
+                    <p className="text-xs text-[var(--text-3)]">Supports .vcf, .csv, .xlsx, .xls</p>
                   </>
                 )}
               </div>
@@ -110,57 +131,67 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
                 }}
               />
 
-              {/* Tips */}
-              <div className="bg-surface rounded-xl p-4 space-y-2">
-                <p className="text-xs font-semibold text-g600">Quick ways to get contacts here:</p>
-                <div className="space-y-1.5 text-xs text-g500">
-                  <p><strong>From your phone:</strong> Open a contact → Share → Save as .vcf file → Upload here. You can share multiple contacts into one .vcf file.</p>
-                  <p><strong>From Outlook:</strong> Select contacts → Export to CSV → Upload here.</p>
-                  <p><strong>From a spreadsheet:</strong> Make sure columns include Name, Email, Phone, Company, Trade → Save as .xlsx or .csv → Upload.</p>
+              <div className="app-card !p-4 space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--text-3)]">
+                  Quick ways to get contacts here
+                </p>
+                <div className="space-y-1.5 text-xs text-[var(--text-2)] leading-relaxed">
+                  <p>
+                    <strong className="text-[var(--text)]">From your phone:</strong> Open a contact → Share →
+                    Save as .vcf → Upload here. Multiple contacts can go in one file.
+                  </p>
+                  <p>
+                    <strong className="text-[var(--text)]">From Outlook:</strong> Select contacts → Export to
+                    CSV → Upload here.
+                  </p>
+                  <p>
+                    <strong className="text-[var(--text)]">From a spreadsheet:</strong> Columns should include
+                    Name, Email, Phone, Company, Trade → Save as .xlsx or .csv → Upload.
+                  </p>
                 </div>
               </div>
             </>
           ) : (
             <>
-              {/* Preview list */}
-              <p className="text-sm font-semibold text-g700">{parsed.length} contacts ready to import</p>
+              <p className="text-sm font-bold text-[var(--text)]">
+                <span className="font-mono text-[var(--accent)]">{parsed.length}</span> contacts ready to
+                import
+              </p>
               <div className="space-y-2 max-h-[50vh] overflow-y-auto">
                 {parsed.map((c, i) => (
-                  <div key={i} className="bg-surface rounded-lg p-3 relative">
+                  <div key={i} className="bg-[var(--card-2)] border border-[var(--border)] rounded-lg p-3 relative">
                     <button
                       onClick={() => removeContact(i)}
-                      className="absolute top-2 right-2 text-g300 hover:text-red-500"
+                      className="absolute top-2 right-2 text-[var(--text-4)] hover:text-[var(--red)]"
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <X size={14} strokeWidth={2} />
                     </button>
                     <input
-                      className="text-sm font-semibold text-g700 bg-transparent w-full focus:outline-none focus:border-b focus:border-mar"
+                      className="text-sm font-bold text-[var(--text)] bg-transparent w-full focus:outline-none focus-visible:border-b focus-visible:border-[var(--accent)]"
                       value={c.name}
                       onChange={(e) => updateContact(i, 'name', e.target.value)}
                     />
-                    <div className="grid grid-cols-2 gap-1 mt-1">
+                    <div className="grid grid-cols-2 gap-1 mt-1.5">
                       <input
-                        className="text-xs text-g500 bg-transparent focus:outline-none focus:border-b focus:border-mar"
+                        className={fieldCls}
                         value={c.email}
                         onChange={(e) => updateContact(i, 'email', e.target.value)}
                         placeholder="email"
                       />
                       <input
-                        className="text-xs text-g500 bg-transparent focus:outline-none focus:border-b focus:border-mar"
+                        className={fieldCls}
                         value={c.phone}
                         onChange={(e) => updateContact(i, 'phone', e.target.value)}
                         placeholder="phone"
                       />
                       <input
-                        className="text-xs text-g500 bg-transparent focus:outline-none focus:border-b focus:border-mar"
+                        className={fieldCls}
                         value={c.company}
                         onChange={(e) => updateContact(i, 'company', e.target.value)}
                         placeholder="company"
                       />
                       <input
-                        className="text-xs text-g500 bg-transparent focus:outline-none focus:border-b focus:border-mar"
+                        className={fieldCls}
                         value={c.trade}
                         onChange={(e) => updateContact(i, 'trade', e.target.value)}
                         placeholder="trade"
@@ -173,29 +204,22 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
           )}
         </div>
 
-        {/* Actions */}
-        <div className="p-5 pt-3 border-t border-g100 space-y-2">
+        <div className="p-5 pt-3 border-t border-[var(--border)] space-y-2">
           {parsed.length > 0 ? (
-            <div className="flex gap-3">
-              <button
-                onClick={() => setParsed([])}
-                className="flex-1 py-3 rounded-xl border border-g200 text-g600 font-semibold text-sm hover:bg-g50 transition-colors"
-              >
+            <div className="flex gap-2">
+              <button onClick={() => setParsed([])} className="app-btn-ghost flex-1">
                 Back
               </button>
               <button
                 onClick={handleConfirm}
                 disabled={importing || parsed.length === 0}
-                className="flex-1 py-3 rounded-xl bg-mar text-white font-semibold text-sm hover:bg-mar-light disabled:opacity-40 transition-colors"
+                className="app-btn-primary flex-1 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {importing ? 'Importing...' : `Import ${parsed.length} Contacts`}
+                {importing ? 'Importing…' : `Import ${parsed.length}`}
               </button>
             </div>
           ) : (
-            <button
-              onClick={onClose}
-              className="w-full py-2.5 text-sm text-g400 hover:text-g600 transition-colors"
-            >
+            <button onClick={onClose} className="app-btn-ghost w-full">
               Cancel
             </button>
           )}

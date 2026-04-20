@@ -95,15 +95,16 @@ export function Intake() {
         <div className="space-y-4">
           <DropZone files={files} onFilesChange={setFiles} disabled={extracting} />
           {extracting ? (
-            <div className="text-center py-4">
-              <div className="w-8 h-8 border-2 border-mar border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm text-g600 font-medium">{extractProgress}</p>
+            <div className="app-card text-center py-6">
+              <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm text-[var(--text)] font-semibold">{extractProgress}</p>
+              <p className="text-xs text-[var(--text-3)] mt-1">Claude is reading your documents…</p>
             </div>
           ) : (
             <button
               onClick={handleExtract}
               disabled={!files.length}
-              className="w-full py-3.5 rounded-xl font-semibold text-white bg-mar hover:bg-mar-light disabled:opacity-40 transition-colors"
+              className="app-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Extract Items
             </button>

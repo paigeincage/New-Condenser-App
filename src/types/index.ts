@@ -39,7 +39,7 @@ export interface Contact {
   company: string;
   trade: string;
   notes: string;
-  preferredChannel: 'email' | 'text';
+  preferredChannel: 'email' | 'text' | 'both';
   channelOverrideUntil: string | null;
   createdAt: string;
 }

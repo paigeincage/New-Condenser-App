@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { Upload, X, FileText } from 'lucide-react';
 
 const ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png,.webp';
 const ACCEPT_TYPES = new Set([
@@ -24,13 +25,16 @@ export function DropZone({ files, onFilesChange, disabled }: DropZoneProps) {
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const addFiles = useCallback((incoming: FileList | null) => {
-    if (!incoming) return;
-    const valid = Array.from(incoming).filter(
-      (f) => ACCEPT_TYPES.has(f.type) || f.name.match(/\.(pdf|docx?|xlsx?|csv|txt|jpe?g|png|webp)$/i)
-    );
-    onFilesChange([...files, ...valid]);
-  }, [files, onFilesChange]);
+  const addFiles = useCallback(
+    (incoming: FileList | null) => {
+      if (!incoming) return;
+      const valid = Array.from(incoming).filter(
+        (f) => ACCEPT_TYPES.has(f.type) || f.name.match(/\.(pdf|docx?|xlsx?|csv|txt|jpe?g|png|webp)$/i)
+      );
+      onFilesChange([...files, ...valid]);
+    },
+    [files, onFilesChange]
+  );
 
   const removeFile = (index: number) => {
     onFilesChange(files.filter((_, i) => i !== index));
@@ -45,12 +49,21 @@ export function DropZone({ files, onFilesChange, disabled }: DropZoneProps) {
   return (
     <div className="space-y-3">
       <div
-        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer
-          ${dragging ? 'border-mar bg-mar-l scale-[1.01]' : 'border-g200 hover:border-mar/50 hover:bg-mar-l/50'}
-          ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
-        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${
+          dragging
+            ? 'border-[var(--accent)] bg-[var(--accent-tint)] scale-[1.01]'
+            : 'border-[var(--border)] hover:border-[var(--accent-glow)] hover:bg-[var(--accent-tint)]'
+        } ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
         onDragLeave={() => setDragging(false)}
-        onDrop={(e) => { e.preventDefault(); setDragging(false); addFiles(e.dataTransfer.files); }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          addFiles(e.dataTransfer.files);
+        }}
         onClick={() => inputRef.current?.click()}
       >
         <input
@@ -63,16 +76,20 @@ export function DropZone({ files, onFilesChange, disabled }: DropZoneProps) {
         />
 
         <div className="flex flex-col items-center gap-3">
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-colors ${dragging ? 'bg-mar/20' : 'bg-surface'}`}>
-            <svg className={`w-7 h-7 ${dragging ? 'text-mar' : 'text-g400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16l.586.586A2 2 0 005.828 17H18.172a2 2 0 001.242-.414L20 16M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
-            </svg>
+          <div
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-colors ${
+              dragging
+                ? 'bg-[var(--accent-tint-2)] border-[var(--accent)] text-[var(--accent)]'
+                : 'bg-[var(--card-2)] border-[var(--border)] text-[var(--text-3)]'
+            }`}
+          >
+            <Upload size={22} strokeWidth={2} />
           </div>
           <div>
-            <p className="text-base font-semibold text-g700">
+            <p className="font-display text-base font-bold uppercase tracking-tight text-[var(--text)]">
               {dragging ? 'Drop files here' : 'Drop files or tap to browse'}
             </p>
-            <p className="text-sm text-g400 mt-1">
+            <p className="text-xs text-[var(--text-3)] mt-1">
               PDF, DOCX, XLSX, images — we'll extract the punch items
             </p>
           </div>
@@ -82,21 +99,29 @@ export function DropZone({ files, onFilesChange, disabled }: DropZoneProps) {
       {files.length > 0 && (
         <div className="space-y-2">
           {files.map((f, i) => (
-            <div key={`${f.name}-${i}`} className="flex items-center justify-between bg-surface rounded-lg px-4 py-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="text-xs font-mono text-g400 uppercase w-10 shrink-0">
+            <div
+              key={`${f.name}-${i}`}
+              className="flex items-center justify-between bg-[var(--card-2)] border border-[var(--border)] rounded-xl px-3 py-2.5"
+            >
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <FileText size={16} className="text-[var(--accent)] shrink-0" strokeWidth={2} />
+                <span className="font-mono text-[10px] font-bold uppercase text-[var(--text-3)] w-10 shrink-0">
                   {f.name.split('.').pop()}
                 </span>
-                <span className="text-sm font-medium text-g700 truncate">{f.name}</span>
-                <span className="text-xs text-g400 shrink-0">{formatSize(f.size)}</span>
+                <span className="text-sm font-semibold text-[var(--text)] truncate">{f.name}</span>
+                <span className="text-[10px] text-[var(--text-3)] shrink-0 font-mono tabular-nums">
+                  {formatSize(f.size)}
+                </span>
               </div>
               <button
-                onClick={(e) => { e.stopPropagation(); removeFile(i); }}
-                className="text-g400 hover:text-red-500 p-1 shrink-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeFile(i);
+                }}
+                aria-label="Remove file"
+                className="text-[var(--text-4)] hover:text-[var(--red)] transition-colors p-1 shrink-0"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X size={16} strokeWidth={2} />
               </button>
             </div>
           ))}

@@ -1,6 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { Toast } from './components/layout/Toast';
 import { BottomNav } from './components/layout/BottomNav';
+import { SplashScreen } from './components/layout/SplashScreen';
+import { useAccessibility } from './hooks/useAccessibility';
+import { useTheme } from './hooks/useTheme';
 
 import { Home } from './pages/Home';
 import { NewProject } from './pages/NewProject';
@@ -10,6 +14,15 @@ import { Contacts } from './pages/Contacts';
 import { Settings } from './pages/Settings';
 import { Dashboard } from './pages/Dashboard';
 import { Lots } from './pages/Lots';
+import { ProfileSettings } from './pages/settings/ProfileSettings';
+import { CommunitiesSettings } from './pages/settings/CommunitiesSettings';
+import { TemplatesSettings } from './pages/settings/TemplatesSettings';
+import { NotificationsSettings } from './pages/settings/NotificationsSettings';
+import { FieldLanguageSettings } from './pages/settings/FieldLanguageSettings';
+import { ContactsSettings } from './pages/settings/ContactsSettings';
+import { AccessibilitySettings } from './pages/settings/AccessibilitySettings';
+
+const SPLASH_SESSION_KEY = 'condenser_splash_seen_v1';
 
 function AppShell() {
   return (
@@ -19,10 +32,37 @@ function AppShell() {
   );
 }
 
+function AppShellWide() {
+  return (
+    <div className="app-shell-wide">
+      <Outlet />
+    </div>
+  );
+}
+
 export default function App() {
+  useAccessibility();
+  useTheme();
+
+  const [showSplash, setShowSplash] = useState(() => {
+    try {
+      return sessionStorage.getItem(SPLASH_SESSION_KEY) !== '1';
+    } catch {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    if (!showSplash) return;
+    try {
+      sessionStorage.setItem(SPLASH_SESSION_KEY, '1');
+    } catch {}
+  }, [showSplash]);
+
   return (
     <BrowserRouter>
       <Toast />
+      {showSplash && <SplashScreen onDismiss={() => setShowSplash(false)} />}
       <main className="pb-24">
         <Routes>
           <Route element={<AppShell />}>
@@ -32,9 +72,18 @@ export default function App() {
             <Route path="/project/:id/intake" element={<Intake />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/settings/profile" element={<ProfileSettings />} />
+            <Route path="/settings/communities" element={<CommunitiesSettings />} />
+            <Route path="/settings/templates" element={<TemplatesSettings />} />
+            <Route path="/settings/notifications" element={<NotificationsSettings />} />
+            <Route path="/settings/field-language" element={<FieldLanguageSettings />} />
+            <Route path="/settings/contacts" element={<ContactsSettings />} />
+            <Route path="/settings/accessibility" element={<AccessibilitySettings />} />
             <Route path="/lots" element={<Lots />} />
             <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+          <Route element={<AppShellWide />}>
+            <Route path="/dashboard" element={<Dashboard />} />
           </Route>
         </Routes>
       </main>

@@ -129,7 +129,7 @@ export function Lots() {
       ) : (
         <div className="space-y-2">
           {filtered.sort((a, b) => a.taskDays - b.taskDays).map(lot => (
-            <div key={lot.id} className="bg-white border-[1.5px] border-g200 rounded-[10px] p-3 hover:border-mar/30 transition-colors">
+            <div key={lot.id} className="bg-[var(--card-2)] border-[1.5px] border-g200 rounded-[10px] p-3 hover:border-mar/30 transition-colors">
               <div className="flex items-center gap-3">
                 <DaysBadge days={lot.taskDays} />
                 <div className="flex-1 min-w-0">
@@ -152,7 +152,7 @@ export function Lots() {
       {/* Paste import modal */}
       {showPaste && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" onClick={() => setShowPaste(false)}>
-          <div className="bg-white w-full sm:max-w-lg max-h-[90vh] rounded-t-2xl sm:rounded-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[var(--card-2)] w-full sm:max-w-lg max-h-[90vh] rounded-t-2xl sm:rounded-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="p-5 pb-3 border-b border-g100">
               <h3 className="text-lg font-bold text-cblack">Import Lots from PCP</h3>
               <p className="text-sm text-g400 mt-0.5">Copy your lot table from PCP portal and paste below</p>

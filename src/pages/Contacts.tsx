@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
+import { Search, Plus, Upload, Pencil, Trash2, Mail, Phone, X } from 'lucide-react';
 import { listContacts, createContact, updateContact, deleteContact } from '../api/contacts';
 import { TopBar } from '../components/layout/TopBar';
 import { ImportModal } from '../components/contacts/ImportModal';
 import { useUI } from '../stores/ui';
 import type { Contact } from '../types';
+
+const INPUT_CLASS =
+  'w-full px-3 py-2.5 rounded-lg border-2 border-[var(--border)] bg-[var(--card-2)] text-[var(--text)] placeholder:text-[var(--text-3)] focus:border-[var(--accent)] focus:outline-none transition-colors text-sm';
+
+type Preference = 'email' | 'text' | 'both';
 
 export function Contacts() {
   const addToast = useUI((s) => s.addToast);
@@ -12,10 +18,19 @@ export function Contacts() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
   const [showImport, setShowImport] = useState(false);
-  const [form, setForm] = useState<{ name: string; email: string; phone: string; company: string; trade: string; preferredChannel: 'email' | 'text' }>({ name: '', email: '', phone: '', company: '', trade: '', preferredChannel: 'email' });
+  const [form, setForm] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+    company: string;
+    trade: string;
+    preferredChannel: Preference;
+  }>({ name: '', email: '', phone: '', company: '', trade: '', preferredChannel: 'email' });
 
   const load = () => {
-    listContacts(search || undefined).then((r) => setContacts(r.contacts)).catch(() => {});
+    listContacts(search || undefined)
+      .then((r) => setContacts(r.contacts))
+      .catch(() => {});
   };
 
   useEffect(load, [search]);
@@ -49,13 +64,14 @@ export function Contacts() {
       phone: c.phone,
       company: c.company,
       trade: c.trade,
-      preferredChannel: c.preferredChannel,
+      preferredChannel: (c.preferredChannel as Preference) ?? 'email',
     });
     setEditing(c);
     setShowForm(true);
   };
 
   const handleDelete = async (c: Contact) => {
+    if (!confirm(`Remove ${c.name}?`)) return;
     try {
       await deleteContact(c.id);
       addToast('Contact deleted', 'success');
@@ -66,109 +82,126 @@ export function Contacts() {
   };
 
   return (
-    <div>
+    <div className="pb-8">
       <TopBar
         title="Contacts"
+        back
         right={
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowImport(true)}
-              className="border border-mar text-mar text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-mar hover:text-white transition-colors"
+              aria-label="Import CSV"
+              className="w-9 h-9 rounded-lg bg-[var(--card-2)] border-2 border-[var(--border)] flex items-center justify-center text-[var(--text-2)] hover:text-[var(--accent)] hover:border-[var(--accent-glow)] transition-colors"
             >
-              Import
+              <Upload size={16} strokeWidth={2} />
             </button>
             <button
-              onClick={() => { resetForm(); setShowForm(true); }}
-              className="bg-mar text-white text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-mar-light transition-colors"
+              onClick={() => {
+                resetForm();
+                setShowForm(true);
+              }}
+              className="app-btn-primary text-sm py-2 px-3"
             >
-              + Add
+              <Plus size={14} strokeWidth={2.5} />
+              Add
             </button>
           </div>
         }
       />
 
-      {/* Search */}
-      <input
-        type="text"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search contacts..."
-        className="w-full px-4 py-2.5 border border-g200 rounded-xl text-sm text-g700 focus:outline-none focus:border-mar mb-4"
-      />
+      <div className="relative mb-4">
+        <Search
+          size={16}
+          strokeWidth={2}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)]"
+        />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search contacts…"
+          className={`${INPUT_CLASS} pl-10`}
+        />
+      </div>
 
-      {/* Form */}
       {showForm && (
-        <div className="bg-surface rounded-xl p-4 mb-4 space-y-3">
+        <div className="app-card mb-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[var(--text)]">
+              {editing ? 'Edit contact' : 'New contact'}
+            </h3>
+            <button onClick={resetForm} className="text-[var(--text-3)] hover:text-[var(--text)]">
+              <X size={18} strokeWidth={2} />
+            </button>
+          </div>
           <input
             type="text"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="Name *"
-            className="w-full px-3 py-2.5 border border-g200 rounded-lg text-sm focus:outline-none focus:border-mar"
+            className={INPUT_CLASS}
             autoFocus
           />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <input
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="Email"
-              className="px-3 py-2.5 border border-g200 rounded-lg text-sm focus:outline-none focus:border-mar"
+              className={INPUT_CLASS}
             />
             <input
               type="tel"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               placeholder="Phone"
-              className="px-3 py-2.5 border border-g200 rounded-lg text-sm focus:outline-none focus:border-mar"
+              className={INPUT_CLASS}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <input
               type="text"
               value={form.company}
               onChange={(e) => setForm({ ...form, company: e.target.value })}
               placeholder="Company"
-              className="px-3 py-2.5 border border-g200 rounded-lg text-sm focus:outline-none focus:border-mar"
+              className={INPUT_CLASS}
             />
             <input
               type="text"
               value={form.trade}
               onChange={(e) => setForm({ ...form, trade: e.target.value })}
               placeholder="Trade"
-              className="px-3 py-2.5 border border-g200 rounded-lg text-sm focus:outline-none focus:border-mar"
+              className={INPUT_CLASS}
             />
           </div>
-
-          {/* Channel preference */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-g600">Preferred:</span>
-            <button
-              onClick={() => setForm({ ...form, preferredChannel: 'email' })}
-              className={`text-sm px-3 py-1 rounded-lg transition-colors ${
-                form.preferredChannel === 'email' ? 'bg-mar text-white' : 'bg-white border border-g200 text-g600'
-              }`}
-            >
-              Email
-            </button>
-            <button
-              onClick={() => setForm({ ...form, preferredChannel: 'text' })}
-              className={`text-sm px-3 py-1 rounded-lg transition-colors ${
-                form.preferredChannel === 'text' ? 'bg-mar text-white' : 'bg-white border border-g200 text-g600'
-              }`}
-            >
-              Text
-            </button>
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--text-3)] mb-2">
+              Send preference
+            </div>
+            <div className="flex gap-2">
+              {(['text', 'email', 'both'] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setForm({ ...form, preferredChannel: p })}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider border-2 transition-colors ${
+                    form.preferredChannel === p
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'bg-[var(--card-2)] text-[var(--text-2)] border-[var(--border)] hover:border-[var(--accent-glow)]'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
           </div>
-
-          <div className="flex gap-2">
-            <button onClick={resetForm} className="flex-1 py-2.5 rounded-lg text-sm font-medium text-g600 bg-white border border-g200">
+          <div className="flex gap-2 pt-1">
+            <button onClick={resetForm} className="app-btn-ghost flex-1">
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={!form.name.trim()}
-              className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white bg-mar hover:bg-mar-light disabled:opacity-40 transition-colors"
+              className="app-btn-primary flex-1 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {editing ? 'Update' : 'Save'}
             </button>
@@ -176,37 +209,72 @@ export function Contacts() {
         </div>
       )}
 
-      {/* List */}
       <div className="space-y-2">
         {contacts.length === 0 ? (
-          <p className="text-center text-g400 text-sm py-8">No contacts yet</p>
+          <div className="app-card text-center py-8">
+            <p className="text-sm font-semibold text-[var(--text-2)]">No contacts yet</p>
+            <p className="text-xs text-[var(--text-3)] mt-1">Add one above or import a CSV.</p>
+          </div>
         ) : (
           contacts.map((c) => (
-            <div key={c.id} className="bg-white border border-g100 rounded-xl p-4 hover:border-mar/20 transition-colors">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-semibold text-g700">{c.name}</p>
-                  <p className="text-sm text-g400">{c.company}{c.trade ? ` · ${c.trade}` : ''}</p>
-                  <div className="flex items-center gap-3 mt-1">
-                    {c.email && <span className="text-xs text-g400">{c.email}</span>}
-                    {c.phone && <span className="text-xs text-g400">{c.phone}</span>}
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    c.preferredChannel === 'text' ? 'bg-blue-100 text-blue-700' : 'bg-surface text-g500'
-                  }`}>
+            <div key={c.id} className="app-card !p-3 flex items-start gap-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 font-display uppercase"
+                style={{
+                  background: 'var(--accent-tint)',
+                  color: 'var(--accent)',
+                  border: '1.5px solid var(--accent-tint-2)',
+                }}
+              >
+                {c.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-bold text-[var(--text)] truncate text-sm">{c.name}</p>
+                  <span
+                    className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 ${
+                      c.preferredChannel === 'both'
+                        ? 'bg-[var(--accent-tint)] text-[var(--accent)] border-[var(--accent-tint-2)]'
+                        : c.preferredChannel === 'text'
+                          ? 'bg-[var(--amber)]/10 text-[var(--amber)] border-[var(--amber)]/30'
+                          : 'bg-[var(--card-2)] text-[var(--text-2)] border-[var(--border)]'
+                    }`}
+                  >
                     {c.preferredChannel}
                   </span>
-                  <button onClick={() => handleEdit(c)} className="text-g400 hover:text-mar p-1" title="Edit">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
+                </div>
+                <p className="text-xs text-[var(--text-3)] truncate">
+                  {c.company}
+                  {c.trade ? ` · ${c.trade}` : ''}
+                </p>
+                <div className="flex items-center gap-3 mt-1.5 text-[11px] text-[var(--text-3)]">
+                  {c.email && (
+                    <span className="flex items-center gap-1">
+                      <Mail size={10} strokeWidth={2} />
+                      <span className="truncate max-w-[140px]">{c.email}</span>
+                    </span>
+                  )}
+                  {c.phone && (
+                    <span className="flex items-center gap-1">
+                      <Phone size={10} strokeWidth={2} />
+                      {c.phone}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-3 mt-2">
+                  <button
+                    onClick={() => handleEdit(c)}
+                    className="flex items-center gap-1 text-[11px] font-bold text-[var(--accent)] hover:underline"
+                  >
+                    <Pencil size={10} strokeWidth={2.5} />
+                    Edit
                   </button>
-                  <button onClick={() => handleDelete(c)} className="text-g400 hover:text-red-500 p-1" title="Delete">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                  <button
+                    onClick={() => handleDelete(c)}
+                    className="flex items-center gap-1 text-[11px] font-bold text-[var(--red)] hover:underline"
+                  >
+                    <Trash2 size={10} strokeWidth={2.5} />
+                    Remove
                   </button>
                 </div>
               </div>
@@ -215,13 +283,7 @@ export function Contacts() {
         )}
       </div>
 
-      {/* Import Modal */}
-      {showImport && (
-        <ImportModal
-          onClose={() => setShowImport(false)}
-          onImported={load}
-        />
-      )}
+      {showImport && <ImportModal onClose={() => setShowImport(false)} onImported={load} />}
     </div>
   );
 }

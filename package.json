@@ -20,11 +20,13 @@
     "dexie": "^4.4.1",
     "dexie-react-hooks": "^4.4.0",
     "jszip": "^3.10.1",
+    "lucide-react": "^1.8.0",
     "mammoth": "^1.12.0",
     "pdfjs-dist": "^5.6.205",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.2",
+    "recharts": "^3.8.1",
     "xlsx": "^0.18.5",
     "zustand": "^5.0.12"
   },

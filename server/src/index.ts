@@ -12,6 +12,7 @@ import { contactsRouter } from './routes/contacts.js';
 import { extractRouter } from './routes/extract.js';
 import { feedbackRouter } from './routes/feedback.js';
 import { contactImportRouter } from './routes/contact-import.js';
+import { voiceRouter } from './routes/voice.js';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001');
@@ -28,6 +29,7 @@ app.use('/api/contacts', contactsRouter);
 app.use('/api/extract', extractRouter);
 app.use('/api/feedback', feedbackRouter);
 app.use('/api/contacts/import', contactImportRouter);
+app.use('/api/voice', voiceRouter);
 
 // Serve frontend in production
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
