@@ -18,6 +18,9 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
 
   projects  Project[]
+  contacts  Contact[]                 @relation("UserContacts")
+  templates Template[]                @relation("UserTemplates")
+  feedback  ClassificationFeedback[]  @relation("UserFeedback")
 
   @@map("users")
 }
@@ -68,6 +71,7 @@ model PunchItem {
 
 model Contact {
   id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId               String    @map("user_id") @db.Uuid
   name                 String
   email                String    @default("")
   phone                String    @default("")
@@ -78,6 +82,9 @@ model Contact {
   channelOverrideUntil DateTime? @map("channel_override_until")
   createdAt            DateTime  @default(now()) @map("created_at")
 
+  user User @relation("UserContacts", fields: [userId], references: [id])
+
+  @@index([userId])
   @@index([trade])
   @@index([name])
   @@map("contacts")
@@ -104,6 +111,7 @@ model SourceFile {
 
 model Template {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
   name      String
   type      String
   subject   String   @default("")
@@ -111,16 +119,23 @@ model Template {
   isDefault Boolean  @default(false) @map("is_default")
   createdAt DateTime @default(now()) @map("created_at")
 
+  user User @relation("UserTemplates", fields: [userId], references: [id])
+
+  @@index([userId])
   @@map("templates")
 }
 
 model ClassificationFeedback {
   id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
   originalText  String   @map("original_text") @db.Text
   originalTrade String   @map("original_trade")
   correctedTrade String  @map("corrected_trade")
   createdAt     DateTime @default(now()) @map("created_at")
 
+  user User @relation("UserFeedback", fields: [userId], references: [id])
+
+  @@index([userId])
   @@map("classification_feedback")
 }
 
@@ -138,4 +153,13 @@ model TradeStep {
 
   @@index([punchItemId])
   @@map("trade_steps")
+}
+
+model WaitlistEntry {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String   @unique
+  source    String   @default("founding_user_cta")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("waitlist_entries")
 }

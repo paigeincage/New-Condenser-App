@@ -3,9 +3,11 @@ import { prisma } from '../lib/prisma.js';
 
 export const projectsRouter = Router();
 
-// List all projects (with status breakdown)
-projectsRouter.get('/', async (_req, res) => {
+// List all projects for the authenticated user (with status breakdown)
+projectsRouter.get('/', async (req, res) => {
+  const userId = req.user!.userId;
   const projects = await prisma.project.findMany({
+    where: { userId },
     orderBy: { createdAt: 'desc' },
     include: {
       _count: { select: { items: true, files: true } },
@@ -26,10 +28,11 @@ projectsRouter.get('/', async (_req, res) => {
   res.json({ projects: result });
 });
 
-// Get single project with items and files
+// Get single project with items and files (verify ownership)
 projectsRouter.get('/:id', async (req, res) => {
-  const project = await prisma.project.findUnique({
-    where: { id: req.params.id },
+  const userId = req.user!.userId;
+  const project = await prisma.project.findFirst({
+    where: { id: req.params.id, userId },
     include: {
       items: { orderBy: [{ trade: 'asc' }, { createdAt: 'asc' }], include: { tradeSteps: true } },
       files: { orderBy: { createdAt: 'desc' } },
@@ -42,11 +45,12 @@ projectsRouter.get('/:id', async (req, res) => {
   res.json({ project });
 });
 
-// Create project
+// Create project (auto-assign to authenticated user)
 projectsRouter.post('/', async (req, res) => {
-  const { address, community, lot, date, userId } = req.body;
-  if (!address || !userId) {
-    res.status(400).json({ error: 'address and userId are required' });
+  const userId = req.user!.userId;
+  const { address, community, lot, date } = req.body;
+  if (!address) {
+    res.status(400).json({ error: 'address is required' });
     return;
   }
   const project = await prisma.project.create({
@@ -55,8 +59,11 @@ projectsRouter.post('/', async (req, res) => {
   res.json({ project });
 });
 
-// Update project
+// Update project (verify ownership)
 projectsRouter.patch('/:id', async (req, res) => {
+  const userId = req.user!.userId;
+  const existing = await prisma.project.findFirst({ where: { id: req.params.id, userId } });
+  if (!existing) { res.status(404).json({ error: 'Project not found' }); return; }
   const { address, community, lot, date, status } = req.body;
   const project = await prisma.project.update({
     where: { id: req.params.id },
@@ -71,8 +78,11 @@ projectsRouter.patch('/:id', async (req, res) => {
   res.json({ project });
 });
 
-// Delete project
+// Delete project (verify ownership)
 projectsRouter.delete('/:id', async (req, res) => {
+  const userId = req.user!.userId;
+  const existing = await prisma.project.findFirst({ where: { id: req.params.id, userId } });
+  if (!existing) { res.status(404).json({ error: 'Project not found' }); return; }
   await prisma.project.delete({ where: { id: req.params.id } });
   res.json({ ok: true });
 });
