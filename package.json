@@ -8,7 +8,7 @@
     "dev:server": "cd server && npm run dev",
     "build": "npm run build:frontend && npm run build:server",
     "build:frontend": "tsc -b && vite build",
-    "build:server": "cd server && npx prisma generate --schema=prisma/schema.prisma && npx tsc --outDir dist",
+    "build:server": "cd server && node node_modules/prisma/build/index.js generate --schema=prisma/schema.prisma && node node_modules/typescript/bin/tsc --outDir dist",
     "start": "node server/dist/index.js",
     "postinstall": "cd server && npm install",
     "test": "vitest run",
@@ -50,5 +50,8 @@
     "vite": "^7.3.1",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.1.2"
+  },
+  "overrides": {
+    "prisma": "6.8.0"
   }
 }
