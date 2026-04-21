@@ -31,7 +31,7 @@ export async function getProject(id: string) {
   }
 }
 
-export function createProject(data: { address: string; community?: string; lot?: string; date?: string; userId: string }) {
+export function createProject(data: { address: string; community?: string; lot?: string; date?: string }) {
   return api<{ project: Project }>('/api/projects', {
     method: 'POST',
     body: JSON.stringify(data),

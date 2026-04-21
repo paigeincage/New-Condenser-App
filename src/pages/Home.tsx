@@ -177,10 +177,16 @@ export function Home() {
         {loading ? (
           <div className="text-center py-12 text-[var(--text-3)] text-sm">Loading…</div>
         ) : active.length === 0 ? (
-          <div className="app-card text-center py-8">
+          <div className="app-card text-center py-10">
             <FolderOpen size={32} className="mx-auto text-[var(--text-4)] mb-3" strokeWidth={1.5} />
-            <p className="text-sm font-semibold text-[var(--text-2)]">No active projects</p>
-            <p className="text-xs text-[var(--text-3)] mt-1">Create one to get started.</p>
+            <p className="text-sm font-semibold text-[var(--text-2)]">No projects yet</p>
+            <p className="text-xs text-[var(--text-3)] mt-1 mb-4">
+              Start a walkthrough — take photos, capture voice notes, or paste in a punch list.
+            </p>
+            <button onClick={() => nav('/new')} className="app-btn-primary inline-flex text-sm py-2 px-4">
+              <Plus size={14} strokeWidth={2.5} />
+              Create your first project
+            </button>
           </div>
         ) : (
           <div className="space-y-3">

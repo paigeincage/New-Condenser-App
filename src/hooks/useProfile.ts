@@ -1,15 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Profile } from '../db';
-import { config } from '../config/builder';
 
 const DEFAULT_PROFILE: Profile = {
   id: 'main',
-  firstName: config.user.name.split(' ')[0] || '',
-  lastName: config.user.name.split(' ').slice(1).join(' ') || '',
+  firstName: '',
+  lastName: '',
   phone: '',
-  email: config.user.email,
-  companyName: config.builder.name,
-  signOff: config.user.name.split(' ')[0] || '',
+  email: '',
+  companyName: '',
+  signOff: '',
   greetingEnabled: true,
   greetingWord: 'Howdy',
 

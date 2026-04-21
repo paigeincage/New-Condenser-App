@@ -3,18 +3,24 @@ import { prisma } from '../lib/prisma.js';
 
 export const contactsRouter = Router();
 
-// List all contacts
+// List contacts (scoped to current user)
 contactsRouter.get('/', async (req, res) => {
   const search = (req.query.search as string) || '';
+  const base = { userId: req.userId };
   const where = search
     ? {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' as const } },
-          { trade: { contains: search, mode: 'insensitive' as const } },
-          { company: { contains: search, mode: 'insensitive' as const } },
+        AND: [
+          base,
+          {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' as const } },
+              { trade: { contains: search, mode: 'insensitive' as const } },
+              { company: { contains: search, mode: 'insensitive' as const } },
+            ],
+          },
         ],
       }
-    : {};
+    : base;
   const contacts = await prisma.contact.findMany({ where, orderBy: { name: 'asc' } });
   res.json({ contacts });
 });
@@ -28,6 +34,7 @@ contactsRouter.post('/', async (req, res) => {
   }
   const contact = await prisma.contact.create({
     data: {
+      userId: req.userId!,
       name,
       email: email || '',
       phone: phone || '',
@@ -40,8 +47,13 @@ contactsRouter.post('/', async (req, res) => {
   res.json({ contact });
 });
 
-// Update contact
+// Update contact — ownership-checked
 contactsRouter.put('/:id', async (req, res) => {
+  const existing = await prisma.contact.findUnique({ where: { id: req.params.id } });
+  if (!existing || existing.userId !== req.userId) {
+    res.status(404).json({ error: 'Contact not found' });
+    return;
+  }
   const { name, email, phone, company, trade, notes, preferredChannel, channelOverrideUntil } = req.body;
   const contact = await prisma.contact.update({
     where: { id: req.params.id },
@@ -59,8 +71,13 @@ contactsRouter.put('/:id', async (req, res) => {
   res.json({ contact });
 });
 
-// Delete contact
+// Delete contact — ownership-checked
 contactsRouter.delete('/:id', async (req, res) => {
+  const existing = await prisma.contact.findUnique({ where: { id: req.params.id } });
+  if (!existing || existing.userId !== req.userId) {
+    res.status(404).json({ error: 'Contact not found' });
+    return;
+  }
   await prisma.contact.delete({ where: { id: req.params.id } });
   res.json({ ok: true });
 });

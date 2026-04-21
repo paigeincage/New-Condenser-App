@@ -4,21 +4,9 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const user = await prisma.user.upsert({
-    where: { email: 'paige@condenser.app' },
-    update: {},
-    create: {
-      id: '00000000-0000-0000-0000-000000000001',
-      email: 'paige@condenser.app',
-      password: 'temp',
-      name: 'Paige Beltran',
-      company: 'Pulte Homes',
-    },
-  });
-  console.log('Seeded user:', user.id, user.name);
-
   const count = await prisma.user.count();
-  console.log('Total users:', count);
+  console.log(`[seed] Existing user count: ${count}`);
+  console.log('[seed] No-op. Users sign up via POST /api/auth/signup.');
 }
 
 main()

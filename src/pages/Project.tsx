@@ -587,7 +587,7 @@ function EditItemModal({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/75 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
       <div
         className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-3 bg-[var(--card)] border-2 border-[var(--border)]"
         onClick={(e) => e.stopPropagation()}

@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import { X, Mail, MessageCircle, Copy, Download, Share2 } from 'lucide-react';
+import { X, Mail, MessageCircle, Copy, Download, Share2, UserPlus } from 'lucide-react';
 import { listContacts } from '../../api/contacts';
 import { sendEmail, sendText, copyToClipboard, downloadAsFile, nativeShare } from '../../services/communication';
 import { useUI } from '../../stores/ui';
 import type { PunchItem, Contact } from '../../types';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_DIGITS_RE = /\d/g;
 
 interface SendModalProps {
   items: PunchItem[];
@@ -38,6 +41,17 @@ export function SendModal({ items, projectAddress, onClose }: SendModalProps) {
   const [selectedTrade, setSelectedTrade] = useState<string>('');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [preview, setPreview] = useState('');
+  const [useManual, setUseManual] = useState(false);
+  const [manualEmail, setManualEmail] = useState('');
+  const [manualPhone, setManualPhone] = useState('');
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   const trades = [...new Set(items.map((i) => i.trade || 'Uncategorized'))].sort();
 
@@ -64,12 +78,25 @@ export function SendModal({ items, projectAddress, onClose }: SendModalProps) {
   const tradeItems = items.filter((i) => (i.trade || 'Uncategorized') === selectedTrade);
   const subject = `Punch List — ${selectedTrade} — ${projectAddress}`;
 
+  const effectiveEmail = useManual ? manualEmail.trim() : selectedContact?.email ?? '';
+  const effectivePhone = useManual ? manualPhone.trim() : selectedContact?.phone ?? '';
+  const emailValid = EMAIL_RE.test(effectiveEmail);
+  const phoneValid = (effectivePhone.match(PHONE_DIGITS_RE)?.length ?? 0) >= 10;
+
   const handleSendEmail = () => {
-    sendEmail(selectedContact?.email || '', subject, preview);
+    if (!emailValid) {
+      addToast('Enter a valid email first', 'error');
+      return;
+    }
+    sendEmail(effectiveEmail, subject, preview);
     addToast(`Opening email for ${selectedTrade}`, 'success');
   };
   const handleSendText = () => {
-    sendText(selectedContact?.phone || '', preview);
+    if (!phoneValid) {
+      addToast('Enter a valid phone first', 'error');
+      return;
+    }
+    sendText(effectivePhone, preview);
     addToast(`Opening text for ${selectedTrade}`, 'success');
   };
   const handleCopy = async () => {
@@ -88,8 +115,10 @@ export function SendModal({ items, projectAddress, onClose }: SendModalProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 bg-black/75 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
       <div
         className="bg-[var(--card)] border-2 border-[var(--border)] w-full sm:max-w-lg max-h-[90vh] rounded-t-2xl sm:rounded-2xl flex flex-col"
@@ -140,7 +169,7 @@ export function SendModal({ items, projectAddress, onClose }: SendModalProps) {
             <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--text-3)] mb-2">
               Send To
             </div>
-            {selectedContact ? (
+            {!useManual && selectedContact ? (
               <div className="bg-[var(--card-2)] border border-[var(--border)] rounded-xl p-3 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-[var(--text)]">{selectedContact.name}</p>
@@ -162,30 +191,60 @@ export function SendModal({ items, projectAddress, onClose }: SendModalProps) {
                   {selectedContact.preferredChannel}
                 </span>
               </div>
-            ) : (
+            ) : !useManual ? (
               <div className="bg-[var(--card-2)] border border-[var(--border)] rounded-xl p-3">
                 <p className="text-sm text-[var(--text-2)]">No contact matched for "{selectedTrade}"</p>
-                <p className="text-xs text-[var(--text-3)] mt-1">You can still send — just enter the recipient manually.</p>
+                <p className="text-xs text-[var(--text-3)] mt-1">Pick one below, or send to someone not in contacts.</p>
+              </div>
+            ) : (
+              <div className="bg-[var(--card-2)] border border-[var(--border)] rounded-xl p-3 space-y-2">
+                <input
+                  type="email"
+                  value={manualEmail}
+                  onChange={(e) => setManualEmail(e.target.value)}
+                  placeholder="Email address"
+                  className="w-full px-3 py-2 rounded-lg border-2 border-[var(--border)] bg-[var(--card)] text-[var(--text)] placeholder:text-[var(--text-3)] focus:border-[var(--accent)] focus:outline-none transition-colors text-sm"
+                />
+                <input
+                  type="tel"
+                  value={manualPhone}
+                  onChange={(e) => setManualPhone(e.target.value)}
+                  placeholder="Phone number"
+                  className="w-full px-3 py-2 rounded-lg border-2 border-[var(--border)] bg-[var(--card)] text-[var(--text)] placeholder:text-[var(--text-3)] focus:border-[var(--accent)] focus:outline-none transition-colors text-sm"
+                />
+                <p className="text-[11px] text-[var(--text-3)]">
+                  Fill one or both. Email enables the Email button, phone enables Text.
+                </p>
               </div>
             )}
 
-            {contacts.length > 0 && (
-              <select
-                className="mt-2 w-full px-3 py-2.5 rounded-lg border-2 border-[var(--border)] bg-[var(--card-2)] text-[var(--text)] focus:border-[var(--accent)] focus:outline-none transition-colors text-sm"
-                value={selectedContact?.id || ''}
-                onChange={(e) => {
-                  const c = contacts.find((c) => c.id === e.target.value);
-                  setSelectedContact(c || null);
-                }}
+            <div className="mt-2 flex items-center gap-2">
+              {contacts.length > 0 && !useManual && (
+                <select
+                  className="flex-1 px-3 py-2.5 rounded-lg border-2 border-[var(--border)] bg-[var(--card-2)] text-[var(--text)] focus:border-[var(--accent)] focus:outline-none transition-colors text-sm"
+                  value={selectedContact?.id || ''}
+                  onChange={(e) => {
+                    const c = contacts.find((c) => c.id === e.target.value);
+                    setSelectedContact(c || null);
+                  }}
+                >
+                  <option value="">Choose a different contact…</option>
+                  {contacts.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} — {c.trade || 'No trade'}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <button
+                type="button"
+                onClick={() => setUseManual((v) => !v)}
+                className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg border-2 border-[var(--border)] bg-[var(--card-2)] text-[var(--text-2)] hover:border-[var(--accent-glow)] hover:text-[var(--accent)] transition-colors text-xs font-bold uppercase tracking-wider"
               >
-                <option value="">Choose a different contact…</option>
-                {contacts.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} — {c.trade || 'No trade'}
-                  </option>
-                ))}
-              </select>
-            )}
+                <UserPlus size={14} strokeWidth={2.5} />
+                {useManual ? 'Use contacts' : 'Send to someone else'}
+              </button>
+            </div>
           </div>
 
           <div>
@@ -200,15 +259,28 @@ export function SendModal({ items, projectAddress, onClose }: SendModalProps) {
 
         <div className="p-5 pt-3 border-t border-[var(--border)] space-y-2">
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={handleSendEmail} className="app-btn-primary">
+            <button
+              onClick={handleSendEmail}
+              disabled={!emailValid}
+              className="app-btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               <Mail size={16} strokeWidth={2.5} />
               Email
             </button>
-            <button onClick={handleSendText} className="app-btn-primary">
+            <button
+              onClick={handleSendText}
+              disabled={!phoneValid}
+              className="app-btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               <MessageCircle size={16} strokeWidth={2.5} />
               Text
             </button>
           </div>
+          {!emailValid && !phoneValid && (
+            <p className="text-[11px] text-[var(--text-3)] text-center">
+              Pick a contact or enter a recipient to enable send.
+            </p>
+          )}
           <div className="grid grid-cols-3 gap-2">
             <button onClick={handleCopy} className="app-btn-ghost text-xs py-2">
               <Copy size={12} strokeWidth={2.5} />
