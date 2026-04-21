@@ -28,6 +28,11 @@ app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/waitlist', waitlistRouter);
 
+// Debug: direct POST test
+app.post('/api/ping', (_req, res) => {
+  res.json({ pong: true, timestamp: new Date().toISOString() });
+});
+
 // Protected routes — require valid JWT
 app.use('/api/files', requireAuth, filesRouter);
 app.use('/api/projects', requireAuth, projectsRouter);
